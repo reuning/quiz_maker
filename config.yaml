@@ -1,0 +1,22 @@
+# Quiz Generator Configuration
+
+llm:
+  model: "llama3.1:8b"
+  temperature: 0.7
+  max_tokens: 2000
+
+quiz:
+  default_questions: 7
+  min_questions: 5
+  max_questions: 10
+  num_options: 4
+
+output:
+  formats: ["docx", "html"]
+  quiz_dir: "./output/quizzes"
+  answer_key_dir: "./output/answer_keys"
+  include_explanations: true
+
+processing:
+  batch_size: 5
+  timeout_seconds: 120
