@@ -5,9 +5,11 @@ A local LLM-powered quiz generation tool that creates multiple-choice quizzes fr
 ## Project Status
 
 **Phase 1: Foundation (Core Infrastructure) - ✅ COMPLETED**
+**Phase 2: LLM Integration - ✅ COMPLETED**
 
 ### Implemented Components
 
+#### Phase 1: Foundation
 1. **Project Structure**
    - Created modular directory structure
    - Initialized Python package with proper `__init__.py` files
@@ -28,14 +30,44 @@ A local LLM-powered quiz generation tool that creates multiple-choice quizzes fr
    - Text chunking for large documents
    - Comprehensive error handling
 
+#### Phase 2: LLM Integration
+4. **Data Models** ([`src/models.py`](src/models.py))
+   - Pydantic models for type safety and validation
+   - Question, Quiz, QuizResponse models
+   - ValidationResult and DocumentInfo models
+   - Automatic validation of question structure
+
+5. **Prompt Templates** ([`src/prompts.py`](src/prompts.py))
+   - Structured prompts for quiz generation
+   - Question improvement prompts
+   - Validation prompts
+   - System prompts for LLM behavior
+
+6. **LLM Interface** ([`src/llm_interface.py`](src/llm_interface.py))
+   - Integration with Ollama for local LLM inference
+   - Automatic retry logic for failed generations
+   - JSON response parsing with error handling
+   - Question improvement functionality
+   - Connection verification
+
+7. **Question Validator** ([`src/question_validator.py`](src/question_validator.py))
+   - Quality checks for generated questions
+   - Duplicate detection
+   - Relevance checking
+   - Option validation
+   - Quiz-level validation
+
 ## Installation
 
 ### Prerequisites
 
 - Python 3.12 or higher
-- UV package manager (recommended) or pip
+- **UV package manager (REQUIRED for this project)**
+- Ollama (for LLM functionality)
 
-### Setup with UV
+### Setup
+
+**Note: This project uses UV for dependency management. All commands should use `uv run` prefix.**
 
 ```bash
 # Clone or navigate to the project directory
@@ -43,17 +75,31 @@ cd quiz_maker
 
 # Install dependencies (UV will create a virtual environment automatically)
 uv sync
+
+# Install Ollama (for LLM functionality)
+# macOS/Linux:
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull a recommended model
+ollama pull llama3.1:8b
 ```
 
-### Setup with pip
+### Running Tests
+
+**Important: Use `uv run` for all Python commands in this project.**
 
 ```bash
-# Create a virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Run all tests
+uv run pytest -v
 
-# Install dependencies
-pip install -r requirements.txt
+# Run specific test file
+uv run pytest tests/test_models.py -v
+
+# Run Phase 1 tests
+uv run pytest tests/test_config_manager.py tests/test_document_processor.py -v
+
+# Run Phase 2 tests
+uv run pytest tests/test_models.py tests/test_question_validator.py tests/test_llm_interface.py -v
 ```
 
 ## Configuration
