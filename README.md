@@ -6,6 +6,7 @@ A local LLM-powered quiz generation tool that creates multiple-choice quizzes fr
 
 **Phase 1: Foundation (Core Infrastructure) - ✅ COMPLETED**
 **Phase 2: LLM Integration - ✅ COMPLETED**
+**Phase 3: Quiz Generation - ✅ COMPLETED**
 
 ### Implemented Components
 
@@ -57,6 +58,16 @@ A local LLM-powered quiz generation tool that creates multiple-choice quizzes fr
    - Option validation
    - Quiz-level validation
 
+#### Phase 3: Quiz Generation
+8. **Quiz Generator** ([`src/quiz_generator.py`](src/quiz_generator.py))
+   - Orchestrates complete quiz generation workflow
+   - Integrates document processing, LLM, and validation
+   - Supports single document and batch processing
+   - Automatic metadata tracking
+   - Configurable question count with min/max enforcement
+   - Comprehensive error handling and retry logic
+   - Quality validation and filtering
+
 ## Installation
 
 ### Prerequisites
@@ -100,7 +111,45 @@ uv run pytest tests/test_config_manager.py tests/test_document_processor.py -v
 
 # Run Phase 2 tests
 uv run pytest tests/test_models.py tests/test_question_validator.py tests/test_llm_interface.py -v
+
+# Run Phase 3 tests
+uv run pytest tests/test_quiz_generator.py -v
 ```
+
+### Running Demo Scripts
+
+**Phase 2 Demo** - LLM Integration (requires Ollama running):
+```bash
+# Make sure Ollama is running first
+ollama serve
+
+# In another terminal, run the demo with a document
+uv run python demo_phase2.py "Thought Paper Reuning Polit Opp.docx"
+
+# Or use a test document
+uv run python demo_phase2.py tests/test_document_1.docx
+```
+
+**Phase 3 Demo** - Complete Quiz Generation (requires Ollama running):
+```bash
+# Make sure Ollama is running first
+ollama serve
+
+# In another terminal, run the demo with a document
+uv run python demo_phase3.py "Thought Paper Reuning Polit Opp.docx"
+
+# Or use a test document
+uv run python demo_phase3.py tests/test_document_1.docx
+```
+
+The Phase 3 demo will:
+- Initialize the complete quiz generator
+- Process the document
+- Generate quiz questions using LLM
+- Validate question quality
+- Create a complete Quiz object with metadata
+- Display the generated quiz with answers
+- Show the quiz data structure
 
 ## Configuration
 
@@ -159,14 +208,25 @@ quiz_maker/
 ├── requirements.txt         # Python dependencies
 ├── pyproject.toml          # UV project configuration
 ├── README.md               # This file
+├── demo_phase2.py          # Phase 2 demo script
+├── demo_phase3.py          # Phase 3 demo script
 ├── src/                    # Source code
 │   ├── __init__.py
 │   ├── config_manager.py   # Configuration management
-│   └── document_processor.py # Document text extraction
+│   ├── document_processor.py # Document text extraction
+│   ├── models.py           # Pydantic data models
+│   ├── prompts.py          # LLM prompt templates
+│   ├── llm_interface.py    # Ollama LLM integration
+│   ├── question_validator.py # Question quality validation
+│   └── quiz_generator.py   # Quiz generation orchestrator
 ├── tests/                  # Test suite
 │   ├── __init__.py
 │   ├── test_config_manager.py
 │   ├── test_document_processor.py
+│   ├── test_models.py
+│   ├── test_llm_interface.py
+│   ├── test_question_validator.py
+│   ├── test_quiz_generator.py
 │   ├── test_integration.py
 │   ├── test_document_1.docx  # Sample Word document
 │   └── test_document_2.pdf   # Sample PDF document
@@ -175,7 +235,9 @@ quiz_maker/
 │   └── answer_keys/       # Generated answer keys
 └── plans/                  # Project planning documents
     ├── architecture.md
-    └── implementation_guide.md
+    ├── implementation_guide.md
+    ├── PHASE2_COMPLETE.md
+    └── PHASE3_COMPLETE.md
 ```
 
 ## Phase 1 Features
@@ -197,13 +259,69 @@ quiz_maker/
 - Chunk large documents for processing
 - Calculate document statistics (word count, character count)
 
+## Usage Examples
+
+### Basic Quiz Generation (Phase 3)
+
+```python
+from src.quiz_generator import create_quiz_generator
+
+# Create quiz generator with default config
+generator = create_quiz_generator(config_path='config.yaml')
+
+# Generate quiz from a document
+quiz = generator.generate_quiz_from_document('essay.docx')
+
+# Access the generated quiz
+print(f"Generated {quiz.num_questions} questions")
+for i, question in enumerate(quiz.questions, 1):
+    print(f"\n{i}. {question.question}")
+    for key, option in sorted(question.options.items()):
+        marker = "✓" if key == question.correct_answer else " "
+        print(f"  [{marker}] {key}. {option}")
+    print(f"  Explanation: {question.explanation}")
+```
+
+### Batch Processing
+
+```python
+# Process multiple documents
+results = generator.generate_batch(
+    ['essay1.docx', 'essay2.pdf', 'essay3.docx'],
+    num_questions=7,
+    validate_questions=True
+)
+
+# Check results
+print(f"Successful: {results['success_count']}/{results['total']}")
+for doc_path, quiz in results['successful']:
+    print(f"✓ {doc_path}: {quiz.num_questions} questions")
+```
+
+### Custom Configuration
+
+```python
+# Generate with custom parameters
+quiz = generator.generate_quiz_from_document(
+    doc_path='essay.docx',
+    num_questions=8,           # Custom number of questions
+    validate_questions=True,   # Enable validation
+    max_retries=5             # More retry attempts
+)
+
+# Add custom metadata
+generator.add_metadata(quiz, {
+    'course': 'Political Science 101',
+    'assignment': 'Essay 1'
+})
+```
+
 ## Next Steps
 
-**Phase 2: LLM Integration** (Coming Next)
-- Implement LLM interface for Ollama
-- Create structured prompts for quiz generation
-- Add question validation
-- Test with local LLM models
+**Phase 4: Output Generation** (Coming Next)
+- Implement output formatter for Word and HTML
+- Create quiz and answer key templates
+- Add print-friendly styling
 
 ## Development
 

@@ -1,0 +1,354 @@
+"""
+Quiz generation orchestration module.
+
+This module coordinates document processing, LLM interaction, and question
+validation to generate complete quizzes from source documents.
+"""
+
+import logging
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from .config_manager import ConfigManager
+from .document_processor import DocumentProcessor
+from .llm_interface import LLMInterface, create_llm_interface
+from .question_validator import QuestionValidator, create_validator
+from .models import Quiz, Question, DocumentInfo
+
+
+logger = logging.getLogger(__name__)
+
+
+class QuizGenerationError(Exception):
+    """Exception raised when quiz generation fails."""
+    pass
+
+
+class QuizGenerator:
+    """Orchestrates the quiz generation process."""
+    
+    def __init__(
+        self,
+        config: Optional[ConfigManager] = None,
+        document_processor: Optional[DocumentProcessor] = None,
+        llm_interface: Optional[LLMInterface] = None,
+        validator: Optional[QuestionValidator] = None
+    ):
+        """
+        Initialize the quiz generator.
+        
+        Args:
+            config: Configuration manager instance (creates default if None)
+            document_processor: Document processor instance (creates default if None)
+            llm_interface: LLM interface instance (creates from config if None)
+            validator: Question validator instance (creates default if None)
+        """
+        self.config = config or ConfigManager()
+        self.document_processor = document_processor or DocumentProcessor()
+        self.llm_interface = llm_interface or create_llm_interface(self.config.config)
+        self.validator = validator or create_validator(self.config.config)
+        
+        logger.info("QuizGenerator initialized")
+    
+    def generate_quiz_from_document(
+        self,
+        doc_path: str,
+        num_questions: Optional[int] = None,
+        validate_questions: bool = True,
+        max_retries: int = 3
+    ) -> Quiz:
+        """
+        Generate a quiz from a document.
+        
+        Args:
+            doc_path: Path to the source document
+            num_questions: Number of questions to generate (uses config default if None)
+            validate_questions: Whether to validate question quality
+            max_retries: Maximum number of retry attempts for generation
+            
+        Returns:
+            Generated Quiz object
+            
+        Raises:
+            QuizGenerationError: If quiz generation fails
+            FileNotFoundError: If document doesn't exist
+            ValueError: If document format is unsupported
+        """
+        logger.info(f"Starting quiz generation from document: {doc_path}")
+        
+        # Use default from config if not specified
+        if num_questions is None:
+            num_questions = self.config.get('quiz.default_questions', 7)
+        
+        # Validate num_questions is within bounds
+        min_questions = self.config.get('quiz.min_questions', 5)
+        max_questions = self.config.get('quiz.max_questions', 10)
+        
+        # Ensure we have a valid integer
+        num_questions = int(num_questions) if num_questions is not None else min_questions
+        
+        if num_questions < min_questions:
+            logger.warning(
+                f"Requested {num_questions} questions, but minimum is {min_questions}. "
+                f"Using {min_questions}."
+            )
+            num_questions = min_questions
+        elif num_questions > max_questions:
+            logger.warning(
+                f"Requested {num_questions} questions, but maximum is {max_questions}. "
+                f"Using {max_questions}."
+            )
+            num_questions = max_questions
+        
+        try:
+            # Step 1: Process document
+            logger.info("Processing document...")
+            doc_info = self.document_processor.process_document(doc_path)
+            logger.info(
+                f"Document processed: {doc_info['word_count']} words, "
+                f"{doc_info['char_count']} characters"
+            )
+            
+            # Check if document has sufficient content
+            if doc_info['word_count'] < 50:
+                raise QuizGenerationError(
+                    f"Document too short ({doc_info['word_count']} words). "
+                    "Need at least 50 words to generate meaningful questions."
+                )
+            
+            # Step 2: Generate questions using LLM
+            logger.info(f"Generating {num_questions} questions...")
+            num_options = self.config.get('quiz.num_options', 4)
+            
+            # Ensure num_questions is an int (should always be at this point)
+            assert num_questions is not None, "num_questions should not be None at this point"
+            
+            quiz_response = self.llm_interface.generate_quiz(
+                text=doc_info['text'],
+                num_questions=num_questions,
+                num_options=num_options,
+                max_retries=max_retries
+            )
+            
+            logger.info(f"Generated {len(quiz_response.questions)} questions")
+            
+            # Step 3: Validate questions if requested
+            if validate_questions:
+                logger.info("Validating questions...")
+                validated_questions = self._validate_and_filter_questions(
+                    quiz_response.questions,
+                    doc_info['text']
+                )
+                
+                if not validated_questions:
+                    raise QuizGenerationError(
+                        "All generated questions failed validation. "
+                        "Try adjusting the source document or generation parameters."
+                    )
+                
+                logger.info(
+                    f"Validation complete: {len(validated_questions)}/{len(quiz_response.questions)} "
+                    "questions passed"
+                )
+            else:
+                validated_questions = quiz_response.questions
+            
+            # Step 4: Create quiz with metadata
+            quiz = self._create_quiz_with_metadata(
+                validated_questions,
+                doc_path,
+                doc_info
+            )
+            
+            logger.info(f"Quiz generation complete: {quiz.num_questions} questions")
+            return quiz
+            
+        except FileNotFoundError as e:
+            logger.error(f"Document not found: {e}")
+            raise
+        except ValueError as e:
+            logger.error(f"Invalid document or parameters: {e}")
+            raise QuizGenerationError(f"Invalid input: {e}")
+        except Exception as e:
+            logger.error(f"Quiz generation failed: {e}", exc_info=True)
+            raise QuizGenerationError(f"Failed to generate quiz: {e}")
+    
+    def _validate_and_filter_questions(
+        self,
+        questions: List[Question],
+        source_text: str
+    ) -> List[Question]:
+        """
+        Validate questions and filter out invalid ones.
+        
+        Args:
+            questions: List of questions to validate
+            source_text: Source text for relevance checking
+            
+        Returns:
+            List of valid questions
+        """
+        valid_questions = []
+        
+        for i, question in enumerate(questions, 1):
+            is_valid, issues = self.validator.validate_question(question, source_text)
+            
+            if is_valid:
+                valid_questions.append(question)
+                logger.debug(f"Question {i}: ✓ Valid")
+            else:
+                logger.warning(f"Question {i}: ✗ Invalid - {'; '.join(issues)}")
+        
+        return valid_questions
+    
+    def _create_quiz_with_metadata(
+        self,
+        questions: List[Question],
+        doc_path: str,
+        doc_info: Dict[str, Any]
+    ) -> Quiz:
+        """
+        Create a Quiz object with metadata.
+        
+        Args:
+            questions: List of validated questions
+            doc_path: Path to source document
+            doc_info: Document processing information
+            
+        Returns:
+            Quiz object with metadata
+        """
+        metadata = {
+            'generated_at': datetime.now().isoformat(),
+            'source_filename': doc_info['filename'],
+            'source_file_type': doc_info['file_type'],
+            'source_word_count': doc_info['word_count'],
+            'source_char_count': doc_info['char_count'],
+            'llm_model': self.llm_interface.model,
+            'llm_temperature': self.llm_interface.temperature,
+        }
+        
+        quiz = Quiz(
+            questions=questions,
+            source_document=doc_path,
+            metadata=metadata
+        )
+        
+        return quiz
+    
+    def validate_quiz_quality(self, quiz: Quiz, source_text: str = "") -> Dict[str, Any]:
+        """
+        Validate the overall quality of a quiz.
+        
+        Args:
+            quiz: The quiz to validate
+            source_text: Optional source text for relevance checking
+            
+        Returns:
+            Dictionary with validation results including:
+                - is_valid: Overall validity
+                - num_questions: Number of questions
+                - num_valid: Number of valid questions
+                - num_invalid: Number of invalid questions
+                - issues: List of issues found
+                - quality_score: Overall quality score (0-1)
+        """
+        return self.validator.validate_quiz(quiz, source_text)
+    
+    def generate_batch(
+        self,
+        doc_paths: List[str],
+        num_questions: Optional[int] = None,
+        validate_questions: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Generate quizzes from multiple documents.
+        
+        Args:
+            doc_paths: List of document paths
+            num_questions: Number of questions per quiz (uses config default if None)
+            validate_questions: Whether to validate question quality
+            
+        Returns:
+            Dictionary with results:
+                - successful: List of (doc_path, quiz) tuples
+                - failed: List of (doc_path, error) tuples
+                - total: Total number of documents processed
+                - success_count: Number of successful generations
+                - failure_count: Number of failed generations
+        """
+        logger.info(f"Starting batch generation for {len(doc_paths)} documents")
+        
+        successful = []
+        failed = []
+        
+        for i, doc_path in enumerate(doc_paths, 1):
+            logger.info(f"Processing document {i}/{len(doc_paths)}: {doc_path}")
+            
+            try:
+                quiz = self.generate_quiz_from_document(
+                    doc_path=doc_path,
+                    num_questions=num_questions,
+                    validate_questions=validate_questions
+                )
+                successful.append((doc_path, quiz))
+                logger.info(f"✓ Successfully generated quiz for {doc_path}")
+                
+            except Exception as e:
+                logger.error(f"✗ Failed to generate quiz for {doc_path}: {e}")
+                failed.append((doc_path, str(e)))
+            
+            # Brief pause between documents to avoid overwhelming the LLM
+            if i < len(doc_paths):
+                time.sleep(1)
+        
+        results = {
+            'successful': successful,
+            'failed': failed,
+            'total': len(doc_paths),
+            'success_count': len(successful),
+            'failure_count': len(failed)
+        }
+        
+        logger.info(
+            f"Batch generation complete: {results['success_count']}/{results['total']} successful"
+        )
+        
+        return results
+    
+    def add_metadata(self, quiz: Quiz, additional_metadata: Dict[str, Any]) -> Quiz:
+        """
+        Add additional metadata to a quiz.
+        
+        Args:
+            quiz: The quiz to update
+            additional_metadata: Dictionary of metadata to add
+            
+        Returns:
+            Updated quiz (note: modifies in place and returns)
+        """
+        quiz.metadata.update(additional_metadata)
+        logger.debug(f"Added metadata to quiz: {list(additional_metadata.keys())}")
+        return quiz
+
+
+def create_quiz_generator(
+    config_path: Optional[str] = None,
+    config: Optional[ConfigManager] = None
+) -> QuizGenerator:
+    """
+    Factory function to create a quiz generator.
+    
+    Args:
+        config_path: Path to configuration file
+        config: Pre-configured ConfigManager instance (takes precedence over config_path)
+        
+    Returns:
+        Configured QuizGenerator instance
+    """
+    if config is None:
+        config = ConfigManager(config_path)
+    
+    return QuizGenerator(config=config)

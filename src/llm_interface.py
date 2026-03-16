@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class LLMInterface:
     """Interface for interacting with Ollama LLM models."""
     
-    def __init__(self, model: str = "llama3.1:8b", temperature: float = 0.7, max_tokens: int = 2000):
+    def __init__(self, model: str = "llama3.1:8b", temperature: float = 0.7, max_tokens: int = 4000):
         """
         Initialize the LLM interface.
         
@@ -60,8 +60,9 @@ class LLMInterface:
         """
         try:
             # List available models
-            models = ollama.list()
-            model_names = [m['name'] for m in models.get('models', [])]
+            models_response = ollama.list()
+            # Access the models attribute and get the model name from each Model object
+            model_names = [m.model for m in models_response.models] if hasattr(models_response, 'models') else []
             
             # Check if our model is available
             if not any(self.model in name for name in model_names):
@@ -146,6 +147,10 @@ class LLMInterface:
             RuntimeError: If the API call fails
         """
         try:
+            logger.debug(f"Calling Ollama with model: {self.model}")
+            logger.debug(f"System prompt (first 200 chars): {system_prompt[:200]}...")
+            logger.debug(f"User prompt (first 200 chars): {prompt[:200]}...")
+            
             response = ollama.chat(
                 model=self.model,
                 messages=[
@@ -158,9 +163,44 @@ class LLMInterface:
                 }
             )
             
-            return response['message']['content']
+            logger.debug(f"Response type: {type(response)}")
+            logger.debug(f"Response: {response}")
+            
+            # Handle both dict and object responses
+            if isinstance(response, dict):
+                logger.debug(f"Response is dict with keys: {response.keys()}")
+                content = response['message']['content']
+            else:
+                # ChatResponse object - access via attributes
+                logger.debug(f"Response is ChatResponse object")
+                if hasattr(response, 'message'):
+                    logger.debug(f"Message: {response.message}")
+                    content = response.message.content
+                    
+                    # Check if content is empty but thinking field exists
+                    if not content and hasattr(response.message, 'thinking') and response.message.thinking:
+                        logger.error(f"Content is empty but thinking field has {len(response.message.thinking)} chars")
+                        logger.error(f"Model used all tokens for reasoning (done_reason: {response.done_reason})")
+                        logger.error(f"Increase max_tokens in config.yaml (current: {self.max_tokens})")
+                        raise RuntimeError(
+                            f"Model returned empty content. All {self.max_tokens} tokens were used for internal reasoning. "
+                            f"Increase max_tokens in config.yaml to at least 6000."
+                        )
+                else:
+                    logger.warning(f"Response has no message attribute, converting to string")
+                    content = str(response)
+            
+            logger.debug(f"Content length: {len(content) if content else 0}")
+            if content:
+                logger.debug(f"Content (first 500 chars): {content[:500]}")
+            else:
+                logger.error(f"Content is empty!")
+                raise RuntimeError("LLM returned empty content")
+            
+            return content
             
         except Exception as e:
+            logger.error(f"Ollama API call failed: {str(e)}", exc_info=True)
             raise RuntimeError(f"Ollama API call failed: {str(e)}")
     
     def _parse_quiz_response(self, response: str) -> QuizResponse:
@@ -180,11 +220,15 @@ class LLMInterface:
         # Try to extract JSON from response (LLM might add extra text)
         response = response.strip()
         
+        # DEBUG: Log the response for troubleshooting
+        logger.debug(f"Raw LLM response (first 500 chars): {response[:500]}")
+        
         # Find JSON object in response
         start_idx = response.find('{')
         end_idx = response.rfind('}')
         
         if start_idx == -1 or end_idx == -1:
+            logger.error(f"No JSON found in response. Response length: {len(response)}, First 200 chars: {response[:200]}")
             raise json.JSONDecodeError("No JSON object found in response", response, 0)
         
         json_str = response[start_idx:end_idx + 1]
