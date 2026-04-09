@@ -18,8 +18,6 @@ class ConfigManager:
         },
         'quiz': {
             'default_questions': 7,
-            'min_questions': 5,
-            'max_questions': 10,
             'num_options': 4,
         },
         'output': {
@@ -89,23 +87,7 @@ class ConfigManager:
         # Validate quiz settings
         quiz = self.config.get('quiz', {})
         
-        min_q = quiz.get('min_questions')
-        max_q = quiz.get('max_questions')
-        default_q = quiz.get('default_questions')
         num_opts = quiz.get('num_options')
-        
-        # Only validate if values are present
-        if min_q is not None and max_q is not None:
-            if min_q > max_q:
-                raise ValueError("min_questions cannot be greater than max_questions")
-        
-        if default_q is not None and min_q is not None:
-            if default_q < min_q:
-                raise ValueError("default_questions cannot be less than min_questions")
-        
-        if default_q is not None and max_q is not None:
-            if default_q > max_q:
-                raise ValueError("default_questions cannot be greater than max_questions")
         
         if num_opts is not None and num_opts < 2:
             raise ValueError("num_options must be at least 2")

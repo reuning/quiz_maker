@@ -51,8 +51,7 @@ class TestConfigManager:
             custom_config = {
                 'llm': {'model': 'custom-model'},
                 'quiz': {
-                    'default_questions': 8,
-                    'max_questions': 15  # Need to set max higher than default
+                    'default_questions': 8
                 }
             }
             yaml.dump(custom_config, f)
@@ -62,27 +61,8 @@ class TestConfigManager:
             config = ConfigManager(config_path=temp_path)
             assert config.get('llm.model') == 'custom-model'
             assert config.get('quiz.default_questions') == 8
-            assert config.get('quiz.max_questions') == 15
             # Should still have defaults for unspecified values
             assert config.get('quiz.num_options') == 4
-        finally:
-            os.unlink(temp_path)
-    
-    def test_validation_min_max_questions(self):
-        """Test validation of min/max questions."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            invalid_config = {
-                'quiz': {
-                    'min_questions': 10,
-                    'max_questions': 5
-                }
-            }
-            yaml.dump(invalid_config, f)
-            temp_path = f.name
-        
-        try:
-            with pytest.raises(ValueError, match="min_questions cannot be greater than max_questions"):
-                ConfigManager(config_path=temp_path)
         finally:
             os.unlink(temp_path)
     

@@ -83,25 +83,8 @@ class QuizGenerator:
         if num_questions is None:
             num_questions = self.config.get('quiz.default_questions', 7)
         
-        # Validate num_questions is within bounds
-        min_questions = self.config.get('quiz.min_questions', 5)
-        max_questions = self.config.get('quiz.max_questions', 10)
-        
         # Ensure we have a valid integer
-        num_questions = int(num_questions) if num_questions is not None else min_questions
-        
-        if num_questions < min_questions:
-            logger.warning(
-                f"Requested {num_questions} questions, but minimum is {min_questions}. "
-                f"Using {min_questions}."
-            )
-            num_questions = min_questions
-        elif num_questions > max_questions:
-            logger.warning(
-                f"Requested {num_questions} questions, but maximum is {max_questions}. "
-                f"Using {max_questions}."
-            )
-            num_questions = max_questions
+        num_questions = int(num_questions)
         
         try:
             # Step 1: Process document

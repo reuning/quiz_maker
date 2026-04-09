@@ -26,8 +26,6 @@ def mock_config():
         },
         'quiz': {
             'default_questions': 7,
-            'min_questions': 5,
-            'max_questions': 10,
             'num_options': 4
         },
         'output': {
@@ -206,22 +204,6 @@ class TestGenerateQuizFromDocument:
         # Verify LLM was called with default (7)
         call_args = mock_llm_interface.generate_quiz.call_args
         assert call_args[1]['num_questions'] == 7
-    
-    def test_generation_enforces_min_questions(self, quiz_generator, mock_llm_interface):
-        """Test that minimum questions constraint is enforced."""
-        quiz = quiz_generator.generate_quiz_from_document('test.docx', num_questions=3)
-        
-        # Should be adjusted to minimum (5)
-        call_args = mock_llm_interface.generate_quiz.call_args
-        assert call_args[1]['num_questions'] == 5
-    
-    def test_generation_enforces_max_questions(self, quiz_generator, mock_llm_interface):
-        """Test that maximum questions constraint is enforced."""
-        quiz = quiz_generator.generate_quiz_from_document('test.docx', num_questions=15)
-        
-        # Should be adjusted to maximum (10)
-        call_args = mock_llm_interface.generate_quiz.call_args
-        assert call_args[1]['num_questions'] == 10
     
     def test_generation_with_validation_disabled(self, quiz_generator, mock_validator):
         """Test generation with validation disabled."""

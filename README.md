@@ -2,108 +2,6 @@
 
 A local LLM-powered quiz generation tool that creates multiple-choice quizzes from student assignments and documents.
 
-## Project Status
-
-**Phase 1: Foundation (Core Infrastructure) - ✅ COMPLETED**
-**Phase 2: LLM Integration - ✅ COMPLETED**
-**Phase 3: Quiz Generation - ✅ COMPLETED**
-**Phase 4: Output Generation - ✅ COMPLETED**
-**Phase 5: User Interface - ✅ COMPLETED**
-
-### Implemented Components
-
-#### Phase 1: Foundation
-1. **Project Structure**
-   - Created modular directory structure
-   - Initialized Python package with proper `__init__.py` files
-   - Set up output directories for quizzes and answer keys
-
-2. **Configuration System** ([`src/config_manager.py`](src/config_manager.py))
-   - Flexible YAML-based configuration
-   - Default configuration with sensible values
-   - Configuration validation and merging
-   - Dot-notation access to config values
-   - Automatic directory creation
-
-3. **Document Processing** ([`src/document_processor.py`](src/document_processor.py))
-   - Support for Word documents (.docx)
-   - Support for PDF documents (.pdf)
-   - Text extraction and cleaning
-   - Document validation
-   - Text chunking for large documents
-   - Comprehensive error handling
-
-#### Phase 2: LLM Integration
-4. **Data Models** ([`src/models.py`](src/models.py))
-   - Pydantic models for type safety and validation
-   - Question, Quiz, QuizResponse models
-   - ValidationResult and DocumentInfo models
-   - Automatic validation of question structure
-
-5. **Prompt Templates** ([`src/prompts.py`](src/prompts.py))
-   - Structured prompts for quiz generation
-   - Question improvement prompts
-   - Validation prompts
-   - System prompts for LLM behavior
-
-6. **LLM Interface** ([`src/llm_interface.py`](src/llm_interface.py))
-   - Integration with Ollama for local LLM inference
-   - Automatic retry logic for failed generations
-   - JSON response parsing with error handling
-   - Question improvement functionality
-   - Connection verification
-
-7. **Question Validator** ([`src/question_validator.py`](src/question_validator.py))
-   - Quality checks for generated questions
-   - Duplicate detection
-   - Relevance checking
-   - Option validation
-   - Quiz-level validation
-
-#### Phase 3: Quiz Generation
-8. **Quiz Generator** ([`src/quiz_generator.py`](src/quiz_generator.py))
-   - Orchestrates complete quiz generation workflow
-   - Integrates document processing, LLM, and validation
-   - Supports single document and batch processing
-   - Automatic metadata tracking
-   - Configurable question count with min/max enforcement
-   - Comprehensive error handling and retry logic
-   - Quality validation and filtering
-   - **Answer position randomization** - Eliminates LLM bias by shuffling answer options
-
-#### Phase 4: Output Generation
-9. **Output Formatter** ([`src/output_formatter.py`](src/output_formatter.py))
-   - Generate Word documents (.docx) for quizzes and answer keys
-   - Generate HTML files with print-friendly styling
-   - Professional formatting with proper spacing and layout
-   - Separate quiz and answer key generation
-   - Configurable explanations in answer keys
-   - Template-based HTML rendering
-
-10. **HTML Templates** ([`src/templates/`](src/templates/))
-    - [`quiz_template.html`](src/templates/quiz_template.html) - Clean, printable quiz layout
-    - [`answer_key_template.html`](src/templates/answer_key_template.html) - Answer key with explanations
-    - Responsive design with print media queries
-    - Professional styling with proper typography
-
-#### Phase 5: User Interface
-11. **CLI Interface** ([`src/cli.py`](src/cli.py))
-    - Comprehensive argument parsing with argparse
-    - Input file validation and glob pattern support
-    - Output directory management
-    - Verbose and debug logging modes
-    - Help documentation with usage examples
-    - Version information
-
-12. **Main Entry Point** ([`quiz_maker.py`](quiz_maker.py))
-    - Complete application orchestration
-    - Component initialization and wiring
-    - Batch document processing
-    - Progress reporting and status updates
-    - Error handling and recovery
-    - Ollama availability checking
-    - Exit code management
-
 ## Installation
 
 ### Prerequisites
@@ -128,7 +26,7 @@ uv sync
 curl -fsSL https://ollama.ai/install.sh | sh
 
 # Pull a recommended model
-ollama pull llama3.1:8b
+ollama pull qwen3.5:27b-q4_K_M 
 ```
 
 ## Usage
@@ -237,53 +135,18 @@ uv run pytest tests/test_models.py tests/test_question_validator.py tests/test_l
 uv run pytest tests/test_quiz_generator.py -v
 ```
 
-### Running Demo Scripts
-
-**Phase 2 Demo** - LLM Integration (requires Ollama running):
-```bash
-# Make sure Ollama is running first
-ollama serve
-
-# In another terminal, run the demo with a document
-uv run python demo_phase2.py "Thought Paper Reuning Polit Opp.docx"
-
-# Or use a test document
-uv run python demo_phase2.py tests/test_document_1.docx
-```
-
-**Phase 3 Demo** - Complete Quiz Generation (requires Ollama running):
-```bash
-# Make sure Ollama is running first
-ollama serve
-
-# In another terminal, run the demo with a document
-uv run python demo_phase3.py "Thought Paper Reuning Polit Opp.docx"
-
-# Or use a test document
-uv run python demo_phase3.py tests/test_document_1.docx
-```
-
-The Phase 3 demo will:
-- Initialize the complete quiz generator
-- Process the document
-- Generate quiz questions using LLM
-- Validate question quality
-- Create a complete Quiz object with metadata
-- Display the generated quiz with answers
-- Show the quiz data structure
-
 ## Configuration
 
 The application uses [`config.yaml`](config.yaml) for configuration. Default settings:
 
 ```yaml
 llm:
-  model: "llama3.1:8b"
+  model: "qwen3.5:27b-q4_K_M"
   temperature: 0.7
   max_tokens: 2000
 
 quiz:
-  default_questions: 7
+  default_questions: 5
   min_questions: 5
   max_questions: 10
   num_options: 4
