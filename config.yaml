@@ -1,9 +1,9 @@
 # Quiz Generator Configuration
 
 llm:
-  model: "qwen3.5:9b"
+  model: "gemma4:31b"
   temperature: 0.7
-  max_tokens: 6000
+  max_tokens: 5000
 
 quiz:
   default_questions: 7

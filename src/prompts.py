@@ -5,7 +5,7 @@ This module contains structured prompts for generating multiple-choice questions
 from document text using local LLMs via Ollama.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 
 
 class PromptTemplates:
@@ -140,4 +140,55 @@ Respond with valid JSON:
   "confidence": 0.0-1.0,
   "reason": "Brief explanation"
 }}"""
+        return prompt
+    
+    @staticmethod
+    def get_single_question_prompt(text: str, num_options: int = 4, existing_questions: Optional[List[str]] = None) -> str:
+        """
+        Generate a prompt for creating a single multiple-choice question from text.
+        
+        Args:
+            text: The source text to generate a question from
+            num_options: Number of answer options (default: 4)
+            existing_questions: List of existing question texts to avoid duplicates
+            
+        Returns:
+            Formatted prompt string for the LLM
+        """
+        existing_text = ""
+        if existing_questions:
+            existing_text = "\n\nEXISTING QUESTIONS (avoid creating similar questions):\n"
+            for i, q in enumerate(existing_questions, 1):
+                existing_text += f"{i}. {q}\n"
+        
+        prompt = f"""You are an expert educator creating a multiple-choice quiz based on the following text. Generate 1 high-quality multiple-choice question that tests understanding of the key concepts.
+
+SOURCE TEXT:
+{text}
+{existing_text}
+INSTRUCTIONS:
+1. Create 1 multiple-choice question with {num_options} options (A, B, C, D)
+2. The question should test comprehension, not just memorization
+3. The question must have exactly ONE correct answer
+4. Incorrect options should be plausible but clearly wrong
+5. The question should end with a question mark
+6. Avoid trivial or overly obvious questions
+7. Include a brief explanation for why the correct answer is right
+8. Make sure the options are distinct and not too similar to each other
+
+OUTPUT FORMAT:
+You must respond with valid JSON in this exact format:
+{{
+  "question": "The question text here?",
+  "options": {{
+    "A": "First option",
+    "B": "Second option",
+    "C": "Third option",
+    "D": "Fourth option"
+  }},
+  "correct_answer": "A",
+  "explanation": "Brief explanation of why this is correct"
+}}
+
+Generate the question now:"""
         return prompt

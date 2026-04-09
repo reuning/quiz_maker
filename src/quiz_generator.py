@@ -6,6 +6,7 @@ validation to generate complete quizzes from source documents.
 """
 
 import logging
+import random
 import time
 from datetime import datetime
 from pathlib import Path
@@ -137,9 +138,12 @@ class QuizGenerator:
             # Step 3: Validate questions if requested
             if validate_questions:
                 logger.info("Validating questions...")
-                validated_questions = self._validate_and_filter_questions(
+                validated_questions = self._validate_and_regenerate_questions(
                     quiz_response.questions,
-                    doc_info['text']
+                    doc_info['text'],
+                    num_questions,
+                    num_options,
+                    max_retries
                 )
                 
                 if not validated_questions:
@@ -149,11 +153,15 @@ class QuizGenerator:
                     )
                 
                 logger.info(
-                    f"Validation complete: {len(validated_questions)}/{len(quiz_response.questions)} "
-                    "questions passed"
+                    f"Validation complete: {len(validated_questions)}/{num_questions} "
+                    "questions ready"
                 )
             else:
                 validated_questions = quiz_response.questions
+            
+            # Step 3.5: Randomize answer positions to avoid bias
+            logger.info("Randomizing answer positions...")
+            validated_questions = self._randomize_answer_positions(validated_questions)
             
             # Step 4: Create quiz with metadata
             quiz = self._create_quiz_with_metadata(
@@ -175,23 +183,30 @@ class QuizGenerator:
             logger.error(f"Quiz generation failed: {e}", exc_info=True)
             raise QuizGenerationError(f"Failed to generate quiz: {e}")
     
-    def _validate_and_filter_questions(
+    def _validate_and_regenerate_questions(
         self,
         questions: List[Question],
-        source_text: str
+        source_text: str,
+        target_count: int,
+        num_options: int,
+        max_retries: int = 3
     ) -> List[Question]:
         """
-        Validate questions and filter out invalid ones.
+        Validate questions and regenerate invalid ones to reach target count.
         
         Args:
             questions: List of questions to validate
             source_text: Source text for relevance checking
+            target_count: Target number of valid questions
+            num_options: Number of options per question
+            max_retries: Maximum retries per failed question
             
         Returns:
-            List of valid questions
+            List of valid questions (up to target_count)
         """
         valid_questions = []
         
+        # First pass: validate all questions
         for i, question in enumerate(questions, 1):
             is_valid, issues = self.validator.validate_question(question, source_text)
             
@@ -201,7 +216,119 @@ class QuizGenerator:
             else:
                 logger.warning(f"Question {i}: ✗ Invalid - {'; '.join(issues)}")
         
+        # If we have enough valid questions, return them
+        if len(valid_questions) >= target_count:
+            return valid_questions[:target_count]
+        
+        # Otherwise, regenerate questions to reach target count
+        num_needed = target_count - len(valid_questions)
+        logger.info(f"Need to regenerate {num_needed} question(s) to reach target of {target_count}")
+        
+        # Get existing question texts to avoid duplicates
+        existing_question_texts = [q.question for q in valid_questions]
+        
+        regeneration_attempts = 0
+        max_total_attempts = num_needed * max_retries
+        
+        while len(valid_questions) < target_count and regeneration_attempts < max_total_attempts:
+            regeneration_attempts += 1
+            logger.info(f"Regeneration attempt {regeneration_attempts}/{max_total_attempts}")
+            
+            try:
+                # Generate a single new question
+                new_question = self.llm_interface.generate_single_question(
+                    text=source_text,
+                    num_options=num_options,
+                    existing_questions=existing_question_texts,
+                    max_retries=2
+                )
+                
+                # Validate the new question
+                is_valid, issues = self.validator.validate_question(new_question, source_text)
+                
+                if is_valid:
+                    valid_questions.append(new_question)
+                    existing_question_texts.append(new_question.question)
+                    logger.info(f"✓ Successfully regenerated question {len(valid_questions)}/{target_count}")
+                else:
+                    logger.warning(f"✗ Regenerated question invalid - {'; '.join(issues)}")
+                    
+            except Exception as e:
+                logger.warning(f"Failed to regenerate question: {e}")
+        
+        if len(valid_questions) < target_count:
+            logger.warning(
+                f"Could only generate {len(valid_questions)}/{target_count} valid questions "
+                f"after {regeneration_attempts} attempts"
+            )
+        
         return valid_questions
+    
+    def _randomize_answer_positions(self, questions: List[Question]) -> List[Question]:
+        """
+        Randomize the position of correct answers across all questions.
+        
+        This method shuffles the answer options for each question to ensure
+        the correct answer is not always in the same position (e.g., always B).
+        This prevents patterns that students might exploit and ensures a more
+        balanced distribution of correct answers across A, B, C, and D.
+        
+        Args:
+            questions: List of questions to randomize
+            
+        Returns:
+            List of questions with randomized answer positions
+        """
+        randomized_questions = []
+        
+        for question in questions:
+            # Get current options and correct answer text
+            options = question.options.copy()
+            correct_text = options[question.correct_answer]
+            
+            # Create list of all option texts
+            option_texts = list(options.values())
+            
+            # Shuffle the option texts using Python's random module
+            random.shuffle(option_texts)
+            
+            # Reassign shuffled texts to A, B, C, D
+            new_options = {
+                'A': option_texts[0],
+                'B': option_texts[1],
+                'C': option_texts[2],
+                'D': option_texts[3]
+            }
+            
+            # Find new position of correct answer
+            new_correct_answer = None
+            for key, text in new_options.items():
+                if text == correct_text:
+                    new_correct_answer = key
+                    break
+            
+            # Safety check: this should never happen, but handle it gracefully
+            if new_correct_answer is None:
+                logger.error(f"Failed to find correct answer after shuffling: {correct_text}")
+                # Fall back to original question if shuffling fails
+                randomized_questions.append(question)
+                continue
+            
+            # Create new question with shuffled options
+            randomized_question = Question(
+                question=question.question,
+                options=new_options,
+                correct_answer=new_correct_answer,
+                explanation=question.explanation
+            )
+            randomized_questions.append(randomized_question)
+            
+            logger.debug(
+                f"Randomized question: '{question.question[:50]}...' - "
+                f"Correct answer moved from {question.correct_answer} to {new_correct_answer}"
+            )
+        
+        return randomized_questions
     
     def _create_quiz_with_metadata(
         self,

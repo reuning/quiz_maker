@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - {{ source_name }}</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in;
+            background-color: #fff;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                padding: 0.5in;
+                max-width: 100%;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .question-block {
+                page-break-inside: avoid;
+            }
+            
+            h1 {
+                page-break-after: avoid;
+            }
+        }
+        
+        /* Header styles */
+        header {
+            text-align: center;
+            margin-bottom: 2em;
+            padding-bottom: 1em;
+            border-bottom: 2px solid #333;
+        }
+        
+        h1 {
+            font-size: 24pt;
+            margin-bottom: 0.5em;
+            color: #2c3e50;
+        }
+        
+        .metadata {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 0.5em;
+        }
+        
+        .metadata p {
+            margin: 0.25em 0;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1em;
+            margin: 1.5em 0;
+            font-size: 11pt;
+        }
+        
+        .instructions strong {
+            color: #007bff;
+        }
+        
+        /* Question styles */
+        .question-block {
+            margin: 2em 0;
+            padding: 1em 0;
+        }
+        
+        .question-text {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 0.75em;
+            color: #2c3e50;
+        }
+        
+        .options {
+            list-style: none;
+            margin-left: 1.5em;
+        }
+        
+        .option {
+            margin: 0.5em 0;
+            padding: 0.5em;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        
+        .option-label {
+            font-weight: bold;
+            margin-right: 0.5em;
+            color: #495057;
+        }
+        
+        /* Answer space for written responses */
+        .answer-space {
+            margin-top: 1em;
+            padding-top: 0.5em;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .answer-line {
+            margin: 0.5em 0;
+            border-bottom: 1px solid #333;
+            height: 1.5em;
+        }
+        
+        /* Footer */
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            font-size: 9pt;
+            color: #999;
+        }
+        
+        /* Screen-only helper */
+        @media screen {
+            body {
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .print-button {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            
+            .print-button:hover {
+                background-color: #0056b3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">🖨️ Print Quiz</button>
+    
+    <header>
+        <h1>Quiz</h1>
+        <div class="metadata">
+            <p><strong>Source:</strong> {{ source_name }}</p>
+            <p><strong>Date:</strong> {{ generated_date }}</p>
+            <p><strong>Questions:</strong> {{ num_questions }}</p>
+        </div>
+    </header>
+    
+    <div class="instructions">
+        <strong>Instructions:</strong> Select the best answer for each question. Mark your answer clearly.
+    </div>
+    
+    <main>
+        {% for question in quiz.questions %}
+        <div class="question-block">
+            <div class="question-text">
+                {{ loop.index }}. {{ question.question }}
+            </div>
+            <ul class="options">
+                {% for option_key in ['A', 'B', 'C', 'D'] %}
+                <li class="option">
+                    <span class="option-label">{{ option_key }}.</span>
+                    <span class="option-text">{{ question.options[option_key] }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="answer-space">
+                <strong>Your Answer:</strong> <span class="answer-line" style="display: inline-block; width: 2em; border-bottom: 1px solid #333;"></span>
+            </div>
+        </div>
+        {% endfor %}
+    </main>
+    
+    <footer>
+        <p>Generated by Quiz Maker</p>
+    </footer>
+</body>
+</html>

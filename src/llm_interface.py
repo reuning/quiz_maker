@@ -288,6 +288,60 @@ class LLMInterface:
         
         raise RuntimeError("Question improvement failed after all retries")
     
+    def generate_single_question(
+        self,
+        text: str,
+        num_options: int = 4,
+        existing_questions: Optional[List[str]] = None,
+        max_retries: int = 3
+    ) -> Question:
+        """
+        Generate a single question from the provided text.
+        
+        Args:
+            text: Source text to generate a question from
+            num_options: Number of answer options
+            existing_questions: List of existing question texts to avoid duplicates
+            max_retries: Maximum number of retry attempts
+            
+        Returns:
+            Generated Question object
+            
+        Raises:
+            RuntimeError: If question generation fails after all retries
+        """
+        prompt = self.prompts.get_single_question_prompt(text, num_options, existing_questions)
+        system_prompt = self.prompts.get_system_prompt()
+        
+        for attempt in range(max_retries):
+            try:
+                logger.debug(f"Generating single question (attempt {attempt + 1}/{max_retries})...")
+                
+                response = self._call_ollama(prompt, system_prompt)
+                
+                # Parse response
+                response = response.strip()
+                start_idx = response.find('{')
+                end_idx = response.rfind('}')
+                
+                if start_idx == -1 or end_idx == -1:
+                    raise json.JSONDecodeError("No JSON object found", response, 0)
+                
+                json_str = response[start_idx:end_idx + 1]
+                data = json.loads(json_str)
+                
+                question = Question(**data)
+                logger.debug(f"Successfully generated single question")
+                return question
+                
+            except (json.JSONDecodeError, ValidationError) as e:
+                logger.warning(f"Single question generation attempt {attempt + 1} failed: {str(e)}")
+                if attempt == max_retries - 1:
+                    raise RuntimeError(f"Failed to generate single question: {str(e)}")
+                time.sleep(1)
+        
+        raise RuntimeError("Single question generation failed after all retries")
+    
     def validate_question_relevance(
         self, 
         question: Question, 
