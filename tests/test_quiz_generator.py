@@ -105,6 +105,20 @@ def mock_llm_interface():
     ]
     
     llm.generate_quiz.return_value = QuizResponse(questions=sample_questions)
+    
+    # Mock generate_single_question for regeneration scenarios
+    llm.generate_single_question.return_value = Question(
+        question="What is a function?",
+        options={
+            "A": "A reusable block of code",
+            "B": "A variable",
+            "C": "A class",
+            "D": "A module"
+        },
+        correct_answer="A",
+        explanation="A function is a reusable block of code."
+    )
+    
     return llm
 
 
@@ -171,10 +185,10 @@ class TestQuizGeneratorInit:
 class TestGenerateQuizFromDocument:
     """Tests for generate_quiz_from_document method."""
     
-    def test_successful_generation(self, quiz_generator, mock_document_processor, 
+    def test_successful_generation(self, quiz_generator, mock_document_processor,
                                    mock_llm_interface):
         """Test successful quiz generation."""
-        quiz = quiz_generator.generate_quiz_from_document('test.docx')
+        quiz = quiz_generator.generate_quiz_from_document('test.docx', num_questions=2)
         
         # Verify document was processed
         mock_document_processor.process_document.assert_called_once_with('test.docx')
@@ -220,6 +234,7 @@ class TestGenerateQuizFromDocument:
         """Test generation with validation enabled."""
         quiz = quiz_generator.generate_quiz_from_document(
             'test.docx',
+            num_questions=2,
             validate_questions=True
         )
         
@@ -450,8 +465,8 @@ class TestCreateQuizGenerator:
             assert isinstance(generator, QuizGenerator)
 
 
-class TestValidateAndFilterQuestions:
-    """Tests for _validate_and_filter_questions method."""
+class TestValidateAndRegenerateQuestions:
+    """Tests for _validate_and_regenerate_questions method."""
     
     def test_all_questions_valid(self, quiz_generator, mock_validator):
         """Test when all questions are valid."""
@@ -472,13 +487,15 @@ class TestValidateAndFilterQuestions:
         
         mock_validator.validate_question.return_value = (True, [])
         
-        valid = quiz_generator._validate_and_filter_questions(questions, "source text")
+        valid = quiz_generator._validate_and_regenerate_questions(
+            questions, "source text", target_count=2, num_options=4
+        )
         
         assert len(valid) == 2
         assert valid == questions
     
-    def test_some_questions_invalid(self, quiz_generator, mock_validator):
-        """Test when some questions are invalid."""
+    def test_some_questions_invalid(self, quiz_generator, mock_validator, mock_llm_interface):
+        """Test when some questions are invalid and regeneration is needed."""
         questions = [
             Question(
                 question="What is question one?",
@@ -494,19 +511,22 @@ class TestValidateAndFilterQuestions:
             )
         ]
         
-        # First valid, second invalid
+        # First valid, second invalid, then regenerated question is valid
         mock_validator.validate_question.side_effect = [
             (True, []),
-            (False, ["Invalid question"])
+            (False, ["Invalid question"]),
+            (True, [])  # For regenerated question
         ]
         
-        valid = quiz_generator._validate_and_filter_questions(questions, "source text")
+        valid = quiz_generator._validate_and_regenerate_questions(
+            questions, "source text", target_count=2, num_options=4
+        )
         
-        assert len(valid) == 1
+        assert len(valid) == 2
         assert valid[0] == questions[0]
     
-    def test_all_questions_invalid(self, quiz_generator, mock_validator):
-        """Test when all questions are invalid."""
+    def test_all_questions_invalid(self, quiz_generator, mock_validator, mock_llm_interface):
+        """Test when all questions are invalid and regeneration is attempted."""
         questions = [
             Question(
                 question="What is question one?",
@@ -516,10 +536,14 @@ class TestValidateAndFilterQuestions:
             )
         ]
         
+        # All questions invalid, including regenerated ones
         mock_validator.validate_question.return_value = (False, ["Invalid"])
         
-        valid = quiz_generator._validate_and_filter_questions(questions, "source text")
+        valid = quiz_generator._validate_and_regenerate_questions(
+            questions, "source text", target_count=1, num_options=4, max_retries=1
+        )
         
+        # Should return empty list since all are invalid
         assert len(valid) == 0
 
 

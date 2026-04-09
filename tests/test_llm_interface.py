@@ -27,7 +27,7 @@ class TestLLMInterface:
         
         assert llm.model == "llama3.1:8b"
         assert llm.temperature == 0.7
-        assert llm.max_tokens == 2000
+        assert llm.max_tokens == 4000
     
     @patch('src.llm_interface.ollama')
     def test_init_ollama_not_running(self, mock_ollama):

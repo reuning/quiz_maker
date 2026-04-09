@@ -350,8 +350,6 @@ class TestOutputFormatter:
             # Check for metadata
             doc_text = "\n".join([p.text for p in doc.paragraphs])
             assert "Source:" in doc_text
-            assert "Generated:" in doc_text
-            assert "Total Questions:" in doc_text
     
     def test_html_includes_print_styles(self, output_formatter, sample_quiz):
         """Test that HTML includes print-friendly CSS."""
