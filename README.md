@@ -3,7 +3,9 @@
 
 # Quiz Generator
 
-A local LLM-powered quiz generation tool that creates multiple-choice quizzes from student assignments and documents.
+A local LLM-powered quiz generation tool that creates multiple-choice quizzes from student assignments and documents. There are [examples](/example/) if you are interested in what the results looks like. 
+
+Currently it uses a local LLM through [Ollama](https://ollama.com/). There are validation checks to make sure it produces the right number of questions, and options. I also have set it up to use randomization via python on the answers (when I initially ran it without that almost every anser was B). I personally had good luck with [Qwen 3.5](https://ollama.com/library/qwen3.5/tags). 
 
 ## Installation
 
@@ -24,7 +26,7 @@ uv sync
 
 # Install Ollama (for LLM functionality)
 # macOS/Linux:
-curl -fsSL https://ollama.ai/install.sh | sh
+curl -fsSL https://ollama.com/install.sh | sh
 
 # Pull a recommended model
 ollama pull qwen3.5:27b-q4_K_M 
