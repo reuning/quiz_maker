@@ -34,7 +34,7 @@ def process_single_document(
     
     Args:
         input_file: Path to input document
-        output_dir: Directory for output files
+        output_dir: Directory for output files (used only if config dirs not set)
         quiz_generator: QuizGenerator instance
         output_formatter: OutputFormatter instance
         args: CLI arguments namespace
@@ -63,44 +63,39 @@ def process_single_document(
         # Create base filename from input file
         base_name = input_file.stem
         
-        # Generate quiz outputs
-        outputs_created = []
-        
+        # Determine formats to generate
+        formats_to_generate = []
         if args.format in ['docx', 'both']:
-            quiz_docx = output_dir / f"{base_name}_quiz.docx"
-            output_formatter.create_word_quiz(quiz, str(quiz_docx))
-            outputs_created.append(quiz_docx)
-            print(f"  📝 Created: {quiz_docx.name}")
-        
+            formats_to_generate.append('docx')
         if args.format in ['html', 'both']:
-            quiz_html = output_dir / f"{base_name}_quiz.html"
-            output_formatter.create_html_quiz(quiz, str(quiz_html))
-            outputs_created.append(quiz_html)
-            print(f"  🌐 Created: {quiz_html.name}")
+            formats_to_generate.append('html')
+        
+        # Generate quiz outputs using the proper method that respects config
+        print("  ⚙️  Creating quiz files...")
+        quiz_outputs = output_formatter.create_quiz_outputs(
+            quiz=quiz,
+            base_filename=base_name,
+            output_dir=str(output_dir) if args.output else None,  # Use CLI output only if explicitly provided
+            formats=formats_to_generate
+        )
+        
+        for fmt, path in quiz_outputs.items():
+            icon = "📝" if fmt == 'docx' else "🌐"
+            print(f"  {icon} Created: {path}")
         
         # Generate answer key if requested
         if not args.no_answer_key:
-            print("  ⚙️  Generating answer key...")
+            print("  ⚙️  Creating answer key files...")
+            answer_outputs = output_formatter.create_answer_key_outputs(
+                quiz=quiz,
+                base_filename=base_name,
+                output_dir=str(output_dir) if args.output else None,  # Use CLI output only if explicitly provided
+                formats=formats_to_generate
+            )
             
-            if args.format in ['docx', 'both']:
-                answer_docx = output_dir / f"{base_name}_answers.docx"
-                output_formatter.create_word_quiz(
-                    quiz,
-                    str(answer_docx),
-                    include_answers=True
-                )
-                outputs_created.append(answer_docx)
-                print(f"  📝 Created: {answer_docx.name}")
-            
-            if args.format in ['html', 'both']:
-                answer_html = output_dir / f"{base_name}_answers.html"
-                output_formatter.create_html_quiz(
-                    quiz,
-                    str(answer_html),
-                    include_answers=True
-                )
-                outputs_created.append(answer_html)
-                print(f"  🌐 Created: {answer_html.name}")
+            for fmt, path in answer_outputs.items():
+                icon = "📝" if fmt == 'docx' else "🌐"
+                print(f"  {icon} Created: {path}")
         
         print(f"  ✅ Successfully processed {input_file.name}")
         logger.info(f"Successfully processed {input_file.name}")
@@ -171,14 +166,15 @@ def process_documents(
     return successful, failed
 
 
-def print_final_summary(successful: int, failed: int, output_dir: Path) -> None:
+def print_final_summary(successful: int, failed: int, output_dir: Path, config_manager: ConfigManager) -> None:
     """
     Print final summary of processing results.
     
     Args:
         successful: Number of successfully processed documents
         failed: Number of failed documents
-        output_dir: Output directory path
+        output_dir: Output directory path (from CLI)
+        config_manager: Configuration manager to get actual output directories
     """
     print("\n" + "="*60)
     print("Processing Complete")
@@ -186,7 +182,13 @@ def print_final_summary(successful: int, failed: int, output_dir: Path) -> None:
     print(f"✅ Successful: {successful}")
     if failed > 0:
         print(f"❌ Failed: {failed}")
-    print(f"📁 Output directory: {output_dir.absolute()}")
+    
+    # Show actual output directories
+    quiz_dir = config_manager.get('output.quiz_dir', './output/quizzes')
+    answer_key_dir = config_manager.get('output.answer_key_dir', './output/answer_keys')
+    
+    print(f"📁 Quiz directory: {Path(quiz_dir).absolute()}")
+    print(f"📁 Answer key directory: {Path(answer_key_dir).absolute()}")
     print("="*60 + "\n")
 
 
@@ -277,7 +279,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
         
         # Print final summary
-        print_final_summary(successful, failed, args.output_dir)
+        print_final_summary(successful, failed, args.output_dir, config_manager)
         
         # Return appropriate exit code
         if failed > 0 and successful == 0:
