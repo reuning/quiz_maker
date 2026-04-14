@@ -7,6 +7,14 @@ A local LLM-powered quiz generation tool that creates multiple-choice quizzes fr
 
 Currently it uses a local LLM through [Ollama](https://ollama.com/). There are validation checks to make sure it produces the right number of questions, and options. I also have set it up to use randomization via python on the answers (when I initially ran it without that almost every anser was B). I personally had good luck with [Qwen 3.5](https://ollama.com/library/qwen3.5/tags). 
 
+## Why? 
+
+There are two related purposes to this idea:
+
+1) A student who has spent time working and writing a paper ought to be able to easily answer questions about that paper. Yes, this was partially created out of a concern over AI use.  
+
+2) I am a firm believer that the purpose of writing is to learn, I hope that this quiz demonstrates to students what they learned through their own research. 
+
 ## Installation
 
 ### Prerequisites
