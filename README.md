@@ -12,8 +12,6 @@ A local LLM-powered quiz generation tool that creates multiple-choice quizzes fr
 
 ### Setup
 
-**Note: This project uses UV for dependency management. All commands should use `uv run` prefix.**
-
 ```bash
 # Clone or navigate to the project directory
 cd quiz_maker
