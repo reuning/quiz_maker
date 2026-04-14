@@ -11,5 +11,4 @@ wheels/
 .venv
 
 plans
-output
 init_test

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Answer Key - example_doc1.docx</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in;
+            background-color: #fff;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                padding: 0.5in;
+                max-width: 100%;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .question-block {
+                page-break-inside: avoid;
+            }
+            
+            h1 {
+                page-break-after: avoid;
+            }
+            
+            .correct-answer {
+                background-color: #d4edda !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* Header styles */
+        header {
+            text-align: center;
+            margin-bottom: 2em;
+            padding-bottom: 1em;
+            border-bottom: 2px solid #333;
+        }
+        
+        h1 {
+            font-size: 24pt;
+            margin-bottom: 0.5em;
+            color: #2c3e50;
+        }
+        
+        .metadata {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 0.5em;
+        }
+        
+        .metadata p {
+            margin: 0.25em 0;
+        }
+        
+        /* Question styles */
+        .question-block {
+            margin: 2em 0;
+            padding: 1em 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .question-text {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 0.75em;
+            color: #2c3e50;
+        }
+        
+        .options {
+            list-style: none;
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        
+        .option {
+            margin: 0.5em 0;
+            padding: 0.5em;
+            font-size: 10pt;
+            line-height: 1.5;
+            border-radius: 4px;
+        }
+        
+        .option-label {
+            font-weight: bold;
+            margin-right: 0.5em;
+            color: #495057;
+        }
+        
+        /* Correct answer highlighting */
+        .correct-answer {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            font-weight: 600;
+        }
+        
+        .correct-answer .option-label {
+            color: #155724;
+        }
+        
+        /* Answer info section */
+        .answer-info {
+            margin-left: 1.5em;
+            margin-top: 1em;
+            padding: 0.75em;
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        
+        .answer-info .correct-label {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 10pt;
+            margin-bottom: 0.5em;
+        }
+        
+        .explanation {
+            font-size: 10pt;
+            color: #495057;
+            margin-top: 0.5em;
+            line-height: 1.5;
+        }
+        
+        .explanation-label {
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 0.5em;
+        }
+        
+        /* Footer */
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            font-size: 9pt;
+            color: #999;
+        }
+        
+        /* Screen-only helper */
+        @media screen {
+            body {
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .print-button {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                z-index: 1000;
+            }
+            
+            .print-button:hover {
+                background-color: #218838;
+            }
+        }
+        
+        /* Quick reference summary */
+        .answer-summary {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 1em;
+            margin: 1.5em 0;
+        }
+        
+        .answer-summary h2 {
+            font-size: 14pt;
+            color: #856404;
+            margin-bottom: 0.5em;
+        }
+        
+        .answer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.5em;
+            margin-top: 0.75em;
+        }
+        
+        .answer-item {
+            font-size: 10pt;
+            padding: 0.25em 0.5em;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ffc107;
+        }
+        
+        .answer-item strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">🖨️ Print Answer Key</button>
+    
+    <header>
+        <h1>Answer Key</h1>
+        <div class="metadata">
+            <p><strong>Source:</strong> example_doc1.docx</p>
+            <p><strong>Date:</strong> April 14, 2026</p>
+            <p><strong>Questions:</strong> 5</p>
+        </div>
+    </header>
+    
+    <!-- Quick reference answer summary -->
+    <div class="answer-summary">
+        <h2>Quick Reference</h2>
+        <div class="answer-grid">
+            
+            <div class="answer-item">
+                <strong>1:</strong> B
+            </div>
+            
+            <div class="answer-item">
+                <strong>2:</strong> B
+            </div>
+            
+            <div class="answer-item">
+                <strong>3:</strong> B
+            </div>
+            
+            <div class="answer-item">
+                <strong>4:</strong> D
+            </div>
+            
+            <div class="answer-item">
+                <strong>5:</strong> A
+            </div>
+            
+        </div>
+    </div>
+    
+    <main>
+        
+        <div class="question-block">
+            <div class="question-text">
+                1. According to the standard understanding of political opportunity in advanced democratic states described in the text, what is the relationship between system access and mobilization intensity?
+            </div>
+            <ul class="options">
+                
+                <li class="option ">
+                    <span class="option-label">A.</span>
+                    <span class="option-text">System access has no significant correlation with mobilization intensity.</span>
+                    
+                </li>
+                
+                <li class="option correct-answer">
+                    <span class="option-label">B.</span>
+                    <span class="option-text">Mobilization is highest in systems with a mix of open and closed access.</span>
+                    
+                    <span style="color: #28a745; font-weight: bold; margin-left: 0.5em;">✓</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">C.</span>
+                    <span class="option-text">Mobilization is highest in fully closed systems due to repression.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">D.</span>
+                    <span class="option-text">Mobilization increases linearly as system access becomes more open.</span>
+                    
+                </li>
+                
+            </ul>
+            <div class="answer-info">
+                <div class="correct-label">
+                    ✓ Correct Answer: B
+                </div>
+                
+                <div class="explanation">
+                    <span class="explanation-label">Explanation:</span>
+                    The text states that a curvilinear relationship is said to exist, where mobilization is most intense in systems with a mix of open and closed access, while it is comparatively reduced in fully open or fully closed systems.
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="question-block">
+            <div class="question-text">
+                2. Meyer and Minkoff (2004) argue that previous work has inadequately conceptualized political opportunity. Which of the following distinctions do they introduce to refine the theory?
+            </div>
+            <ul class="options">
+                
+                <li class="option ">
+                    <span class="option-label">A.</span>
+                    <span class="option-text">The contrast between international support and domestic state repression levels.</span>
+                    
+                </li>
+                
+                <li class="option correct-answer">
+                    <span class="option-label">B.</span>
+                    <span class="option-text">The distinction between objective system changes and perceptions of openness, as well as specific versus general opportunities.</span>
+                    
+                    <span style="color: #28a745; font-weight: bold; margin-left: 0.5em;">✓</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">C.</span>
+                    <span class="option-text">The difference between economic resources and political resources available to movements.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">D.</span>
+                    <span class="option-text">The separation between violent and non-violent movement activities in authoritarian regimes.</span>
+                    
+                </li>
+                
+            </ul>
+            <div class="answer-info">
+                <div class="correct-label">
+                    ✓ Correct Answer: B
+                </div>
+                
+                <div class="explanation">
+                    <span class="explanation-label">Explanation:</span>
+                    The text highlights Meyer and Minkoff&#39;s introduction of differences between objective changes and perceptions, specific versus applicable opportunities, and different movement activities.
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="question-block">
+            <div class="question-text">
+                3. To address the limitations of studying perceived opportunities through retrospective accounts, the author suggests which methodological approach?
+            </div>
+            <ul class="options">
+                
+                <li class="option ">
+                    <span class="option-label">A.</span>
+                    <span class="option-text">Focusing exclusively on movements that have successfully achieved their political goals.</span>
+                    
+                </li>
+                
+                <li class="option correct-answer">
+                    <span class="option-label">B.</span>
+                    <span class="option-text">Initiating a longitudinal survey to capture activists&#39; perceptions prior to increased mobilization.</span>
+                    
+                    <span style="color: #28a745; font-weight: bold; margin-left: 0.5em;">✓</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">C.</span>
+                    <span class="option-text">Analyzing government documents to track official policy changes over time.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">D.</span>
+                    <span class="option-text">Conducting retrospective interviews to understand how activists rationalize past successes.</span>
+                    
+                </li>
+                
+            </ul>
+            <div class="answer-info">
+                <div class="correct-label">
+                    ✓ Correct Answer: B
+                </div>
+                
+                <div class="explanation">
+                    <span class="explanation-label">Explanation:</span>
+                    The text suggests a longitudinal survey to capture trends of perception prior to mobilization increases, avoiding the risk of post-hoc rationalization found in retrospective accounts.
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="question-block">
+            <div class="question-text">
+                4. Based on Almeida&#39;s (2003) research on protest waves in El Salvador, how do opportunities and threats interact to influence mobilization?
+            </div>
+            <ul class="options">
+                
+                <li class="option ">
+                    <span class="option-label">A.</span>
+                    <span class="option-text">Threats consistently lead to demobilization unless international support is present.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">B.</span>
+                    <span class="option-text">Opportunities directly reduce the likelihood of violent protests regardless of organizational structure.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">C.</span>
+                    <span class="option-text">Organizations form only in response to threats, with opportunities playing a negligible role.</span>
+                    
+                </li>
+                
+                <li class="option correct-answer">
+                    <span class="option-label">D.</span>
+                    <span class="option-text">Increasing opportunity creates organizations that are later radicalized into violent protests when new threats are imposed.</span>
+                    
+                    <span style="color: #28a745; font-weight: bold; margin-left: 0.5em;">✓</span>
+                    
+                </li>
+                
+            </ul>
+            <div class="answer-info">
+                <div class="correct-label">
+                    ✓ Correct Answer: D
+                </div>
+                
+                <div class="explanation">
+                    <span class="explanation-label">Explanation:</span>
+                    The text describes Almeida&#39;s finding of a complex relationship where increasing opportunity creates organizations that are then radicalized into violent protests when opportunities are limited and threats imposed.
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="question-block">
+            <div class="question-text">
+                5. According to the text, why does the author argue that the traditional political opportunity framework becomes ineffective when applied to democratizing movements?
+            </div>
+            <ul class="options">
+                
+                <li class="option correct-answer">
+                    <span class="option-label">A.</span>
+                    <span class="option-text">Because the structural conditions measured as opportunities often constitute the very goals and grievances the movement seeks to change.</span>
+                    
+                    <span style="color: #28a745; font-weight: bold; margin-left: 0.5em;">✓</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">B.</span>
+                    <span class="option-text">Because these movements mobilize primarily in response to international signals rather than domestic political structures.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">C.</span>
+                    <span class="option-text">Because researchers cannot distinguish between the movement&#39;s success and the initial perception of openness in these contexts.</span>
+                    
+                </li>
+                
+                <li class="option ">
+                    <span class="option-label">D.</span>
+                    <span class="option-text">Because democratizing movements consistently fail to mobilize when the political system is fully open or fully closed.</span>
+                    
+                </li>
+                
+            </ul>
+            <div class="answer-info">
+                <div class="correct-label">
+                    ✓ Correct Answer: A
+                </div>
+                
+                <div class="explanation">
+                    <span class="explanation-label">Explanation:</span>
+                    The text explains that for democratizing movements focused on opening the state, &#39;structural opportunities that are traditionally examined become the grievances that fuel the movement, and later the success of the movement.&#39; This overlap between the movement&#39;s goals and the definition of political opportunity makes the traditional framework ineffective for understanding their mobilization.
+                </div>
+                
+            </div>
+        </div>
+        
+    </main>
+    
+    <footer>
+        <p>Generated by Quiz Maker</p>
+    </footer>
+</body>
+</html>
