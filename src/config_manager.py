@@ -27,7 +27,6 @@ class ConfigManager:
             'include_explanations': True,
         },
         'processing': {
-            'batch_size': 5,
             'timeout_seconds': 120,
         }
     }
@@ -101,9 +100,6 @@ class ConfigManager:
         
         # Validate processing settings
         processing = self.config.get('processing', {})
-        if processing.get('batch_size', 0) < 1:
-            raise ValueError("batch_size must be at least 1")
-        
         if processing.get('timeout_seconds', 0) < 1:
             raise ValueError("timeout_seconds must be at least 1")
     

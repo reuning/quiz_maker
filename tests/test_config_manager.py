@@ -28,7 +28,7 @@ class TestConfigManager:
         config = ConfigManager()
         assert config.get('llm.temperature') == 0.7
         assert config.get('quiz.num_options') == 4
-        assert config.get('processing.batch_size') == 5
+        assert config.get('processing.timeout_seconds') == 120
     
     def test_get_with_default(self):
         """Test getting non-existent keys returns default."""

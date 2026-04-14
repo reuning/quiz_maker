@@ -16,5 +16,4 @@ output:
   include_explanations: true
 
 processing:
-  batch_size: 5
   timeout_seconds: 120

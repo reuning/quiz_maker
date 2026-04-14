@@ -35,7 +35,6 @@ def mock_config():
             'include_explanations': True
         },
         'processing': {
-            'batch_size': 5,
             'timeout_seconds': 120
         }
     }
@@ -333,71 +332,6 @@ class TestValidateQuizQuality:
         assert 'invalid_questions' in result
 
 
-class TestGenerateBatch:
-    """Tests for batch generation."""
-    
-    def test_batch_generation_all_successful(self, quiz_generator):
-        """Test batch generation with all documents succeeding."""
-        doc_paths = ['doc1.docx', 'doc2.docx', 'doc3.docx']
-        
-        results = quiz_generator.generate_batch(doc_paths)
-        
-        assert results['total'] == 3
-        assert results['success_count'] == 3
-        assert results['failure_count'] == 0
-        assert len(results['successful']) == 3
-        assert len(results['failed']) == 0
-    
-    def test_batch_generation_with_failures(self, quiz_generator, mock_document_processor):
-        """Test batch generation with some failures."""
-        doc_paths = ['doc1.docx', 'doc2.docx', 'doc3.docx']
-        
-        # Make second document fail
-        def side_effect(path):
-            if 'doc2' in path:
-                raise FileNotFoundError(f"File not found: {path}")
-            return {
-                'text': 'Sample text ' * 20,
-                'filename': Path(path).name,
-                'file_type': '.docx',
-                'word_count': 100,
-                'char_count': 500
-            }
-        
-        mock_document_processor.process_document.side_effect = side_effect
-        
-        results = quiz_generator.generate_batch(doc_paths)
-        
-        assert results['total'] == 3
-        assert results['success_count'] == 2
-        assert results['failure_count'] == 1
-        assert len(results['successful']) == 2
-        assert len(results['failed']) == 1
-        
-        # Check failed entry
-        failed_doc, error = results['failed'][0]
-        assert 'doc2' in failed_doc
-        assert 'not found' in error.lower()
-    
-    def test_batch_generation_empty_list(self, quiz_generator):
-        """Test batch generation with empty document list."""
-        results = quiz_generator.generate_batch([])
-        
-        assert results['total'] == 0
-        assert results['success_count'] == 0
-        assert results['failure_count'] == 0
-    
-    def test_batch_generation_with_custom_num_questions(self, quiz_generator, mock_llm_interface):
-        """Test batch generation with custom number of questions."""
-        doc_paths = ['doc1.docx', 'doc2.docx']
-        
-        results = quiz_generator.generate_batch(doc_paths, num_questions=8)
-        
-        # Verify all LLM calls used the custom number
-        for call in mock_llm_interface.generate_quiz.call_args_list:
-            assert call[1]['num_questions'] == 8
-
-
 class TestAddMetadata:
     """Tests for add_metadata method."""
     
@@ -614,21 +548,3 @@ class TestIntegrationScenarios:
             assert question.correct_answer in question.options
             assert len(question.explanation) > 0
     
-    def test_batch_processing_workflow(self, quiz_generator):
-        """Test batch processing workflow."""
-        doc_paths = ['doc1.docx', 'doc2.docx']
-        
-        results = quiz_generator.generate_batch(
-            doc_paths,
-            num_questions=5,
-            validate_questions=True
-        )
-        
-        assert results['total'] == 2
-        assert results['success_count'] == 2
-        
-        # Verify each quiz
-        for doc_path, quiz in results['successful']:
-            assert isinstance(quiz, Quiz)
-            assert quiz.num_questions > 0
-            assert quiz.source_document == doc_path

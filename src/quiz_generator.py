@@ -367,67 +367,6 @@ class QuizGenerator:
         """
         return self.validator.validate_quiz(quiz, source_text)
     
-    def generate_batch(
-        self,
-        doc_paths: List[str],
-        num_questions: Optional[int] = None,
-        validate_questions: bool = True
-    ) -> Dict[str, Any]:
-        """
-        Generate quizzes from multiple documents.
-        
-        Args:
-            doc_paths: List of document paths
-            num_questions: Number of questions per quiz (uses config default if None)
-            validate_questions: Whether to validate question quality
-            
-        Returns:
-            Dictionary with results:
-                - successful: List of (doc_path, quiz) tuples
-                - failed: List of (doc_path, error) tuples
-                - total: Total number of documents processed
-                - success_count: Number of successful generations
-                - failure_count: Number of failed generations
-        """
-        logger.info(f"Starting batch generation for {len(doc_paths)} documents")
-        
-        successful = []
-        failed = []
-        
-        for i, doc_path in enumerate(doc_paths, 1):
-            logger.info(f"Processing document {i}/{len(doc_paths)}: {doc_path}")
-            
-            try:
-                quiz = self.generate_quiz_from_document(
-                    doc_path=doc_path,
-                    num_questions=num_questions,
-                    validate_questions=validate_questions
-                )
-                successful.append((doc_path, quiz))
-                logger.info(f"✓ Successfully generated quiz for {doc_path}")
-                
-            except Exception as e:
-                logger.error(f"✗ Failed to generate quiz for {doc_path}: {e}")
-                failed.append((doc_path, str(e)))
-            
-            # Brief pause between documents to avoid overwhelming the LLM
-            if i < len(doc_paths):
-                time.sleep(1)
-        
-        results = {
-            'successful': successful,
-            'failed': failed,
-            'total': len(doc_paths),
-            'success_count': len(successful),
-            'failure_count': len(failed)
-        }
-        
-        logger.info(
-            f"Batch generation complete: {results['success_count']}/{results['total']} successful"
-        )
-        
-        return results
-    
     def add_metadata(self, quiz: Quiz, additional_metadata: Dict[str, Any]) -> Quiz:
         """
         Add additional metadata to a quiz.
