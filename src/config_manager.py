@@ -20,7 +20,6 @@ class ConfigManager:
         },
         "quiz": {
             "default_questions": 7,
-            "num_options": 4,
         },
         "output": {
             "formats": ["docx", "html"],
@@ -113,14 +112,6 @@ class ConfigManager:
         n_gpu_layers = llm.get("n_gpu_layers")
         if isinstance(n_gpu_layers, bool) or not isinstance(n_gpu_layers, int):
             raise ValueError("llm.n_gpu_layers must be an integer")
-
-        # Validate quiz settings
-        quiz = self.config.get("quiz", {})
-
-        num_opts = quiz.get("num_options")
-
-        if num_opts is not None and num_opts < 2:
-            raise ValueError("num_options must be at least 2")
 
         # Validate output formats
         output = self.config.get("output", {})

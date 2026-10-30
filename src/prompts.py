@@ -12,16 +12,13 @@ class PromptTemplates:
     """Collection of prompt templates for quiz generation."""
 
     @staticmethod
-    def get_quiz_generation_prompt(
-        text: str, num_questions: int, num_options: int = 4
-    ) -> str:
+    def get_quiz_generation_prompt(text: str, num_questions: int) -> str:
         """
         Generate a prompt for creating multiple-choice questions from text.
 
         Args:
             text: The source text to generate questions from
             num_questions: Number of questions to generate
-            num_options: Number of answer options per question (default: 4)
 
         Returns:
             Formatted prompt string for the LLM
@@ -32,7 +29,7 @@ STUDENT'S PAPER:
 {text}
 
 INSTRUCTIONS:
-1. Create {num_questions} multiple-choice questions with {num_options} options each (A, B, C, D)
+1. Create {num_questions} multiple-choice questions with 4 options each (A, B, C, D)
 2. Address the student as the paper's author, for example: "In your paper, which argument did you use to...?" or "Which conclusion did you draw about...?"
 3. Test recall of what the student actually wrote, not general knowledge or understanding of the broader subject
 4. Each question must have exactly ONE correct answer supported by the paper
@@ -149,14 +146,13 @@ Respond with valid JSON:
 
     @staticmethod
     def get_single_question_prompt(
-        text: str, num_options: int = 4, existing_questions: Optional[List[str]] = None
+        text: str, existing_questions: Optional[List[str]] = None
     ) -> str:
         """
         Generate a prompt for creating a single multiple-choice question from text.
 
         Args:
             text: The source text to generate a question from
-            num_options: Number of answer options (default: 4)
             existing_questions: List of existing question texts to avoid duplicates
 
         Returns:
@@ -176,7 +172,7 @@ STUDENT'S PAPER:
 {text}
 {existing_text}
 INSTRUCTIONS:
-1. Create 1 multiple-choice question with {num_options} options (A, B, C, D)
+1. Create 1 multiple-choice question with 4 options (A, B, C, D)
 2. Address the student as the paper's author, for example: "In your paper, which argument did you use to...?"
 3. Test recall of what the student actually wrote, not general knowledge or understanding of the broader subject
 4. The question must have exactly ONE correct answer supported by the paper

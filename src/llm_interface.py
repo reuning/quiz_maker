@@ -95,13 +95,10 @@ class LLMInterface:
         self,
         text: str,
         num_questions: int = 7,
-        num_options: int = 4,
         max_retries: int = 3,
     ) -> QuizResponse:
         """Generate a schema-validated quiz from the provided text."""
-        prompt = self.prompts.get_quiz_generation_prompt(
-            text, num_questions, num_options
-        )
+        prompt = self.prompts.get_quiz_generation_prompt(text, num_questions)
         quiz_response = self._generate_and_validate(
             prompt=prompt,
             system_prompt=self.prompts.get_system_prompt(),
@@ -235,15 +232,12 @@ class LLMInterface:
     def generate_single_question(
         self,
         text: str,
-        num_options: int = 4,
         existing_questions: Optional[List[str]] = None,
         max_retries: int = 3,
     ) -> Question:
         """Generate one schema-validated question from the provided text."""
         return self._generate_and_validate(
-            prompt=self.prompts.get_single_question_prompt(
-                text, num_options, existing_questions
-            ),
+            prompt=self.prompts.get_single_question_prompt(text, existing_questions),
             system_prompt=self.prompts.get_system_prompt(),
             response_model=Question,
             operation="generate a single question",

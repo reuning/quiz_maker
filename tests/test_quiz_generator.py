@@ -17,11 +17,10 @@ def mock_config():
     config = Mock(spec=ConfigManager)
     config.config = {
         "llm": {"model_path": "test.gguf"},
-        "quiz": {"default_questions": 5, "num_options": 4},
+        "quiz": {"default_questions": 5},
     }
     config.get.side_effect = lambda key, default=None: {
         "quiz.default_questions": 5,
-        "quiz.num_options": 4,
     }.get(key, default)
     return config
 
@@ -159,13 +158,12 @@ def test_invalid_question_is_regenerated_and_included(
     ]
 
     valid = quiz_generator._validate_and_regenerate_questions(
-        original_questions, "source text", target_count=2, num_options=4
+        original_questions, "source text", target_count=2
     )
 
     assert valid == [original_questions[0], replacement]
     call = mock_llm_interface.generate_single_question.call_args
     assert call.kwargs["text"] == "source text"
-    assert call.kwargs["num_options"] == 4
     assert call.kwargs["existing_questions"][0] == original_questions[0].question
     assert replacement.question in call.kwargs["existing_questions"]
     assert call.kwargs["max_retries"] == 2
@@ -175,7 +173,7 @@ def test_extra_questions_are_trimmed_to_target(quiz_generator):
     questions = [make_question(f"Question {index}?") for index in range(4)]
 
     valid = quiz_generator._validate_and_regenerate_questions(
-        questions, "source text", target_count=2, num_options=4
+        questions, "source text", target_count=2
     )
 
     assert valid == questions[:2]

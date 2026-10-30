@@ -158,7 +158,6 @@ llm:
 
 quiz:
   default_questions: 5
-  num_options: 4
 
 output:
   formats: ["docx", "html"]
