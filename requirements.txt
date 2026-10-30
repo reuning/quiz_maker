@@ -1,12 +1,12 @@
 # Core dependencies
-python-docx>=0.8.11
-pdfplumber>=0.9.0
-ollama>=0.1.0
-jinja2>=3.1.0
-pyyaml>=6.0
-pydantic>=2.0.0
+jinja2>=3.1.6
+llama-cpp-python>=0.3.36
+pdfplumber>=0.11.9
+pydantic>=2.12.5
+python-docx>=1.2.0
+pyyaml>=6.0.3
 
 # Development dependencies
-pytest>=7.4.0
-black>=23.0.0
-flake8>=6.0.0
+black>=26.3.1
+flake8>=7.3.0
+pytest>=9.0.2
