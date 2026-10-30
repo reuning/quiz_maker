@@ -27,8 +27,15 @@ class TestDocumentProcessor:
         processor = DocumentProcessor()
         text = "This  is   a    test\n\n\n\nwith   spaces"
         cleaned = processor.clean_text(text)
-        assert "  " not in cleaned
-        assert "\n\n\n" not in cleaned
+        assert cleaned == "This is a test\n\nwith spaces"
+
+    def test_clean_text_preserves_paragraph_breaks(self):
+        """Test cleaning preserves paragraph structure and normalizes line endings."""
+        processor = DocumentProcessor()
+        text = "First   paragraph.\r\n \t\r\nSecond\tparagraph.\nThird paragraph."
+        assert processor.clean_text(text) == (
+            "First paragraph.\n\nSecond paragraph.\nThird paragraph."
+        )
 
     def test_clean_text_removes_control_characters(self):
         """Test text cleaning removes control characters."""
