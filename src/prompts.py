@@ -2,7 +2,7 @@
 Prompt templates for LLM-based quiz generation.
 
 This module contains structured prompts for generating multiple-choice questions
-from document text using local LLMs via Ollama.
+from document text using a local LLM.
 """
 
 from typing import Dict, Any, List, Optional
@@ -10,33 +10,37 @@ from typing import Dict, Any, List, Optional
 
 class PromptTemplates:
     """Collection of prompt templates for quiz generation."""
-    
+
     @staticmethod
-    def get_quiz_generation_prompt(text: str, num_questions: int, num_options: int = 4) -> str:
+    def get_quiz_generation_prompt(
+        text: str, num_questions: int, num_options: int = 4
+    ) -> str:
         """
         Generate a prompt for creating multiple-choice questions from text.
-        
+
         Args:
             text: The source text to generate questions from
             num_questions: Number of questions to generate
             num_options: Number of answer options per question (default: 4)
-            
+
         Returns:
             Formatted prompt string for the LLM
         """
-        prompt = f"""You are an expert educator creating a multiple-choice quiz based on the following text. Generate {num_questions} high-quality multiple-choice questions that test understanding of the key concepts.
+        prompt = f"""You are creating a multiple-choice quiz for the student who wrote the following paper. The purpose is to test whether the author can recall the arguments, claims, evidence, and distinctions in their own writing. Generate {num_questions} high-quality questions about this specific paper.
 
-SOURCE TEXT:
+STUDENT'S PAPER:
 {text}
 
 INSTRUCTIONS:
 1. Create {num_questions} multiple-choice questions with {num_options} options each (A, B, C, D)
-2. Questions should test comprehension, not just memorization
-3. Each question must have exactly ONE correct answer
-4. Incorrect options should be plausible but clearly wrong
-5. Questions should cover different parts of the text
-6. Avoid trivial or overly obvious questions
-7. Include brief explanations for why the correct answer is right
+2. Address the student as the paper's author, for example: "In your paper, which argument did you use to...?" or "Which conclusion did you draw about...?"
+3. Test recall of what the student actually wrote, not general knowledge or understanding of the broader subject
+4. Each question must have exactly ONE correct answer supported by the paper
+5. Incorrect options should be plausible but clearly inconsistent with the paper's specific claims
+6. Questions should cover different arguments and parts of the paper
+7. Avoid trivial questions about wording, titles, or formatting
+8. Make all options similar in length and specificity; do not make the correct answer noticeably longer or more detailed than the distractors
+9. Include brief explanations that refer to the student's own argument or claim
 
 OUTPUT FORMAT:
 You must respond with valid JSON in this exact format:
@@ -58,33 +62,33 @@ You must respond with valid JSON in this exact format:
 
 Generate the quiz now:"""
         return prompt
-    
+
     @staticmethod
     def get_question_improvement_prompt(question: Dict[str, Any], issue: str) -> str:
         """
         Generate a prompt for improving a specific question.
-        
+
         Args:
             question: The question dictionary to improve
             issue: Description of what needs improvement
-            
+
         Returns:
             Formatted prompt string for the LLM
         """
         prompt = f"""The following multiple-choice question needs improvement:
 
 QUESTION:
-{question.get('question', '')}
+{question.get("question", "")}
 
 OPTIONS:
-{chr(10).join(f"{k}: {v}" for k, v in question.get('options', {}).items())}
+{chr(10).join(f"{k}: {v}" for k, v in question.get("options", {}).items())}
 
-CORRECT ANSWER: {question.get('correct_answer', '')}
+CORRECT ANSWER: {question.get("correct_answer", "")}
 
 ISSUE TO FIX:
 {issue}
 
-Please provide an improved version of this question that addresses the issue. Respond with valid JSON in this format:
+Please provide an improved version that addresses the issue. The question should address the student as the paper's author and test recall of their own arguments or claims. Keep every option similar in length and specificity so the correct answer is not given away. Respond with valid JSON in this format:
 {{
   "question": "Improved question text?",
   "options": {{
@@ -97,39 +101,40 @@ Please provide an improved version of this question that addresses the issue. Re
   "explanation": "Brief explanation"
 }}"""
         return prompt
-    
+
     @staticmethod
     def get_system_prompt() -> str:
         """
         Get the system prompt that sets the LLM's role and behavior.
-        
+
         Returns:
             System prompt string
         """
-        return """You are an expert educational content creator specializing in creating high-quality multiple-choice questions. Your questions should:
-- Test deep understanding, not just recall
+        return """You are an expert educational content creator who quizzes college students on papers they wrote themselves. Your questions should:
+- Address the student as the author (for example, "In your paper, you argued...")
+- Test recall of the student's own arguments, claims, evidence, and distinctions rather than general subject knowledge
 - Have clear, unambiguous wording
-- Include plausible distractors (incorrect options)
-- Be appropriate for college-level students
-- Cover important concepts from the source material
+- Include plausible distractors that are clearly inconsistent with the student's paper
+- Keep all options similar in length and specificity so the correct answer is not given away
+- Cover important ideas from different parts of the student's paper
 - Always respond with valid, properly formatted JSON"""
-    
+
     @staticmethod
     def get_validation_prompt(question: Dict[str, Any], text: str) -> str:
         """
         Generate a prompt for validating if a question is relevant to the source text.
-        
+
         Args:
             question: The question to validate
             text: The source text
-            
+
         Returns:
             Formatted prompt string for validation
         """
         prompt = f"""Evaluate if this multiple-choice question is relevant to and answerable from the source text.
 
 QUESTION:
-{question.get('question', '')}
+{question.get("question", "")}
 
 SOURCE TEXT:
 {text[:1000]}...
@@ -141,40 +146,45 @@ Respond with valid JSON:
   "reason": "Brief explanation"
 }}"""
         return prompt
-    
+
     @staticmethod
-    def get_single_question_prompt(text: str, num_options: int = 4, existing_questions: Optional[List[str]] = None) -> str:
+    def get_single_question_prompt(
+        text: str, num_options: int = 4, existing_questions: Optional[List[str]] = None
+    ) -> str:
         """
         Generate a prompt for creating a single multiple-choice question from text.
-        
+
         Args:
             text: The source text to generate a question from
             num_options: Number of answer options (default: 4)
             existing_questions: List of existing question texts to avoid duplicates
-            
+
         Returns:
             Formatted prompt string for the LLM
         """
         existing_text = ""
         if existing_questions:
-            existing_text = "\n\nEXISTING QUESTIONS (avoid creating similar questions):\n"
+            existing_text = (
+                "\n\nEXISTING QUESTIONS (avoid creating similar questions):\n"
+            )
             for i, q in enumerate(existing_questions, 1):
                 existing_text += f"{i}. {q}\n"
-        
-        prompt = f"""You are an expert educator creating a multiple-choice quiz based on the following text. Generate 1 high-quality multiple-choice question that tests understanding of the key concepts.
 
-SOURCE TEXT:
+        prompt = f"""You are creating a multiple-choice quiz for the student who wrote the following paper. Generate 1 high-quality question that tests whether the author can recall an argument, claim, piece of evidence, or distinction from their own writing.
+
+STUDENT'S PAPER:
 {text}
 {existing_text}
 INSTRUCTIONS:
 1. Create 1 multiple-choice question with {num_options} options (A, B, C, D)
-2. The question should test comprehension, not just memorization
-3. The question must have exactly ONE correct answer
-4. Incorrect options should be plausible but clearly wrong
-5. The question should end with a question mark
-6. Avoid trivial or overly obvious questions
-7. Include a brief explanation for why the correct answer is right
-8. Make sure the options are distinct and not too similar to each other
+2. Address the student as the paper's author, for example: "In your paper, which argument did you use to...?"
+3. Test recall of what the student actually wrote, not general knowledge or understanding of the broader subject
+4. The question must have exactly ONE correct answer supported by the paper
+5. Incorrect options should be plausible but clearly inconsistent with the paper's specific claims
+6. The question should end with a question mark
+7. Avoid trivial questions about wording, titles, or formatting
+8. Include a brief explanation that refers to the student's own argument or claim
+9. Make sure the options are distinct, plausible, and similar in length and specificity; do not make the correct answer noticeably longer or more detailed than the distractors
 
 OUTPUT FORMAT:
 You must respond with valid JSON in this exact format:

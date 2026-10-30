@@ -10,5 +10,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Local model weights
+models/
+
 plans
 init_test
+AGENTS.md

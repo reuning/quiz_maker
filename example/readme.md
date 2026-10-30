@@ -3,7 +3,7 @@ Examples taken from bad essays I wrote in grad school.
 Quizzes generated via: 
 
 ```
-python quiz_maker.py --input example/input/* --output example/output
+uv run python quiz_maker.py --input example/input/* --output example/output
 ```
 
 Below I've copied the text from the [example_doc_1.docx](/example/input/example_doc1.docx) and the quiz generated from it ([word](/example/output/example_doc1.docx) and [html](/example/output/example_doc1.html) versions), and the answer guide ([word](/example/output/example_doc1_answers.docx) and [html](/example/output/example_doc1_answers.html))
@@ -37,82 +37,82 @@ Quiz
 Source: example_doc1.docx
 Instructions: Select the best answer for each question.
 
-1. According to the standard understanding of political opportunity in advanced democratic states described in the text, what is the relationship between system access and mobilization intensity?
-    - A. System access has no significant correlation with mobilization intensity.
-    - B. Mobilization is highest in systems with a mix of open and closed access.
-    - C. Mobilization is highest in fully closed systems due to repression.
-    - D. Mobilization increases linearly as system access becomes more open.
+1. According to the text, what is the primary limitation of traditional political opportunity theories when applied to democratizing movements?
+    - A. They overemphasize the role of perceived threats rather than actual structural openings
+    - B. They assume that structural opportunities and movement goals are distinct, when they often overlap in democratization contexts
+    - C. They do not sufficiently distinguish between different types of protest activities within a movement
+    - D. They fail to account for the influence of international actors on movement mobilization
 
-2. Meyer and Minkoff (2004) argue that previous work has inadequately conceptualized political opportunity. Which of the following distinctions do they introduce to refine the theory?
-    - A. The contrast between international support and domestic state repression levels.
-    - B. The distinction between objective system changes and perceptions of openness, as well as specific versus general opportunities.
-    - C. The difference between economic resources and political resources available to movements.
-    - D. The separation between violent and non-violent movement activities in authoritarian regimes.
+2. How does Meyer and Minkoff (2004) advance the conceptualization of political opportunity beyond previous research?
+    - A. By distinguishing between objective system changes, perceived openness, and movement-specific versus general opportunities
+    - B. By arguing that political opportunity should be measured exclusively through longitudinal surveys
+    - C. By proving that curvilinear relationships between access and mobilization do not exist in any context
+    - D. By demonstrating that opportunities only matter in advanced democratic states
 
-3. To address the limitations of studying perceived opportunities through retrospective accounts, the author suggests which methodological approach?
-    - A. Focusing exclusively on movements that have successfully achieved their political goals.
-    - B. Initiating a longitudinal survey to capture activists' perceptions prior to increased mobilization.
-    - C. Analyzing government documents to track official policy changes over time.
-    - D. Conducting retrospective interviews to understand how activists rationalize past successes.
+3. Based on Inclán's (2008) study of the Zapatista movement, which of the following findings challenges traditional political opportunity theories?
+    - A. The movement primarily responded to signals from international actors rather than domestic conditions
+    - B. The movement mobilized most intensely in areas with the least political opportunity
+    - C. The movement's success was directly proportional to increased state openness
+    - D. The movement deescalated when faced with new threats from the state
 
-4. Based on Almeida's (2003) research on protest waves in El Salvador, how do opportunities and threats interact to influence mobilization?
-    - A. Threats consistently lead to demobilization unless international support is present.
-    - B. Opportunities directly reduce the likelihood of violent protests regardless of organizational structure.
-    - C. Organizations form only in response to threats, with opportunities playing a negligible role.
-    - D. Increasing opportunity creates organizations that are later radicalized into violent protests when new threats are imposed.
+4. What methodological approach does the author propose for future research to better understand the relationship between political opportunity and movement outcomes?
+    - A. Conducting case studies of single movements in isolation to ensure depth of analysis
+    - B. Focusing exclusively on the post-hoc accounts of movement leaders after their success
+    - C. Developing quantitative models that measure only objective structural changes in the state
+    - D. Examining multiple movements within a single system across different periods of their trajectory
 
-5. According to the text, why does the author argue that the traditional political opportunity framework becomes ineffective when applied to democratizing movements?
-    - A. Because the structural conditions measured as opportunities often constitute the very goals and grievances the movement seeks to change.
-    - B. Because these movements mobilize primarily in response to international signals rather than domestic political structures.
-    - C. Because researchers cannot distinguish between the movement's success and the initial perception of openness in these contexts.
-    - D. Because democratizing movements consistently fail to mobilize when the political system is fully open or fully closed.
+5. According to the text, what is a key risk in relying solely on research like Kurzman's (1996) that focuses on movement accounts after success?
+    - A. Such research cannot account for the role of international support in movement mobilization
+    - B. It is at risk of capturing activists' post-hoc rationalization rather than their actual decision-making processes
+    - C. It fails to distinguish between different types of opportunities available to the movement
+    - D. It overemphasizes the importance of perceived threats rather than actual structural conditions
 
 ## Example 1 Answer Guide
 
 Answer Key
 Source: example_doc1.docx
-1. According to the standard understanding of political opportunity in advanced democratic states described in the text, what is the relationship between system access and mobilization intensity?
-    - A. System access has no significant correlation with mobilization intensity.
-    - B. Mobilization is highest in systems with a mix of open and closed access.
-    - C. Mobilization is highest in fully closed systems due to repression.
-    - D. Mobilization increases linearly as system access becomes more open.
+1. According to the text, what is the primary limitation of traditional political opportunity theories when applied to democratizing movements?
+    - A. They overemphasize the role of perceived threats rather than actual structural openings
+    - B. They assume that structural opportunities and movement goals are distinct, when they often overlap in democratization contexts
+    - C. They do not sufficiently distinguish between different types of protest activities within a movement
+    - D. They fail to account for the influence of international actors on movement mobilization
 
 Correct Answer: B
-Explanation: The text states that a curvilinear relationship is said to exist, where mobilization is most intense in systems with a mix of open and closed access, while it is comparatively reduced in fully open or fully closed systems.
+Explanation: The text explicitly states that for democratizing movements, 'structural opportunities that are traditionally examined become the grievances that fuel the movement, and later the success of the movement,' creating an overlap between opportunity and outcomes that makes traditional frameworks ineffective.
 
-2. Meyer and Minkoff (2004) argue that previous work has inadequately conceptualized political opportunity. Which of the following distinctions do they introduce to refine the theory?
-    - A. The contrast between international support and domestic state repression levels.
-    - B. The distinction between objective system changes and perceptions of openness, as well as specific versus general opportunities.
-    - C. The difference between economic resources and political resources available to movements.
-    - D. The separation between violent and non-violent movement activities in authoritarian regimes.
-
-Correct Answer: B
-Explanation: The text highlights Meyer and Minkoff's introduction of differences between objective changes and perceptions, specific versus applicable opportunities, and different movement activities.
-
-3. To address the limitations of studying perceived opportunities through retrospective accounts, the author suggests which methodological approach?
-    - A. Focusing exclusively on movements that have successfully achieved their political goals.
-    - B. Initiating a longitudinal survey to capture activists' perceptions prior to increased mobilization.
-    - C. Analyzing government documents to track official policy changes over time.
-    - D. Conducting retrospective interviews to understand how activists rationalize past successes.
-
-Correct Answer: B
-Explanation: The text suggests a longitudinal survey to capture trends of perception prior to mobilization increases, avoiding the risk of post-hoc rationalization found in retrospective accounts.
-
-4. Based on Almeida's (2003) research on protest waves in El Salvador, how do opportunities and threats interact to influence mobilization?
-    - A. Threats consistently lead to demobilization unless international support is present.
-    - B. Opportunities directly reduce the likelihood of violent protests regardless of organizational structure.
-    - C. Organizations form only in response to threats, with opportunities playing a negligible role.
-    - D. Increasing opportunity creates organizations that are later radicalized into violent protests when new threats are imposed.
-
-Correct Answer: D
-Explanation: The text describes Almeida's finding of a complex relationship where increasing opportunity creates organizations that are then radicalized into violent protests when opportunities are limited and threats imposed.
-
-5. According to the text, why does the author argue that the traditional political opportunity framework becomes ineffective when applied to democratizing movements?
-    - A. Because the structural conditions measured as opportunities often constitute the very goals and grievances the movement seeks to change.
-    - B. Because these movements mobilize primarily in response to international signals rather than domestic political structures.
-    - C. Because researchers cannot distinguish between the movement's success and the initial perception of openness in these contexts.
-    - D. Because democratizing movements consistently fail to mobilize when the political system is fully open or fully closed.
+2. How does Meyer and Minkoff (2004) advance the conceptualization of political opportunity beyond previous research?
+    - A. By distinguishing between objective system changes, perceived openness, and movement-specific versus general opportunities
+    - B. By arguing that political opportunity should be measured exclusively through longitudinal surveys
+    - C. By proving that curvilinear relationships between access and mobilization do not exist in any context
+    - D. By demonstrating that opportunities only matter in advanced democratic states
 
 Correct Answer: A
-Explanation: The text explains that for democratizing movements focused on opening the state, 'structural opportunities that are traditionally examined become the grievances that fuel the movement, and later the success of the movement.' This overlap between the movement's goals and the definition of political opportunity makes the traditional framework ineffective for understanding their mobilization.
+Explanation: The text notes that Meyer and Minkoff introduce 'important distinctions' including differences between objective changes and perceptions, specific versus general opportunities, and how different movement activities respond differently to opportunities.
+
+3. Based on Inclán's (2008) study of the Zapatista movement, which of the following findings challenges traditional political opportunity theories?
+    - A. The movement primarily responded to signals from international actors rather than domestic conditions
+    - B. The movement mobilized most intensely in areas with the least political opportunity
+    - C. The movement's success was directly proportional to increased state openness
+    - D. The movement deescalated when faced with new threats from the state
+
+Correct Answer: B
+Explanation: The text states that Inclán (2008) 'finds that the Zapatista movement was most mobilized in areas with the least opportunity and that opportunities had a tendency to decrease the amount of protests,' which contradicts traditional theories predicting mobilization in response to openings.
+
+4. What methodological approach does the author propose for future research to better understand the relationship between political opportunity and movement outcomes?
+    - A. Conducting case studies of single movements in isolation to ensure depth of analysis
+    - B. Focusing exclusively on the post-hoc accounts of movement leaders after their success
+    - C. Developing quantitative models that measure only objective structural changes in the state
+    - D. Examining multiple movements within a single system across different periods of their trajectory
+
+Correct Answer: D
+Explanation: The author argues that 'research should examine a variety of movements in the context of a single system' and should 'break down the effects of opportunity into different periods of movement growth' including initial mobilization, peak, and deescalation.
+
+5. According to the text, what is a key risk in relying solely on research like Kurzman's (1996) that focuses on movement accounts after success?
+    - A. Such research cannot account for the role of international support in movement mobilization
+    - B. It is at risk of capturing activists' post-hoc rationalization rather than their actual decision-making processes
+    - C. It fails to distinguish between different types of opportunities available to the movement
+    - D. It overemphasizes the importance of perceived threats rather than actual structural conditions
+
+Correct Answer: B
+Explanation: The text explicitly states that 'research similar to Kurzman's (1996), which focuses on accounts of the movement after its success are at risk of activist's post hoc rationalization,' suggesting that retrospective accounts may not accurately reflect the perceptions and decisions made during the movement.
 

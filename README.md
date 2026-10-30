@@ -3,25 +3,26 @@
 
 # Quiz Generator
 
-A local LLM-powered quiz generation tool that creates multiple-choice quizzes from student assignments and documents. There are [examples](/example/) if you are interested in what the results looks like. 
+A local LLM-powered quiz generation tool that creates multiple-choice quizzes from student assignments and documents. Everything runs locally in-process via [`llama-cpp-python`](https://github.com/abetlen/llama-cpp-python) — no cloud API or background inference daemon required. There are [examples](/example/) if you are interested in what the results look like.
 
-Currently it uses a local LLM through [Ollama](https://ollama.com/). There are validation checks to make sure it produces the right number of questions, and options. I also have set it up to use randomization via python on the answers (when I initially ran it without that almost every anser was B). I personally had good luck with [Qwen 3.5](https://ollama.com/library/qwen3.5/tags). 
+It uses grammar-constrained JSON output (`QuizResponse` / `Question` Pydantic schemas), preflight context-budget checks so long papers are never silently truncated, quality validation checks, and Python-side option shuffling (without shuffling, the model puts nearly every answer at B).
 
-## Why? 
+## Why?
 
 There are two related purposes to this idea:
 
 1) A student who has spent time working and writing a paper ought to be able to easily answer questions about that paper. Yes, this was partially created out of a concern over AI use.  
 
-2) I am a firm believer that the purpose of writing is to learn, I hope that this quiz demonstrates to students what they learned through their own research. 
+2) I am a firm believer that the purpose of writing is to learn, I hope that this quiz demonstrates to students what they learned through their own research.
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.12 or higher
-- UV package manager
-- Ollama (for LLM functionality)
+- [uv](https://docs.astral.sh/uv/) package manager
+- C/C++ build toolchain (Xcode Command Line Tools on macOS) for building `llama-cpp-python`
+- A local `.gguf` chat model (tested with `Qwen3.5-27B` Q4_K_M)
 
 ### Setup
 
@@ -29,22 +30,40 @@ There are two related purposes to this idea:
 # Clone or navigate to the project directory
 cd quiz_maker
 
-# Install dependencies (UV will create a virtual environment automatically)
-uv sync
+# Install dependencies (on macOS with Apple Silicon, disable OpenMP if clang lacks libomp)
+CMAKE_ARGS="-DGGML_OPENMP=OFF" uv sync
 
-# Install Ollama (for LLM functionality)
-# macOS/Linux:
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull a recommended model
-ollama pull qwen3.5:27b-q4_K_M 
+# Place your GGUF model at the configured path (default: ./models/model.gguf)
+mkdir -p models
+cp /path/to/your-model.gguf ./models/model.gguf
 ```
+
+### Downloading a model
+
+Download a GGUF instruct/chat model from [Hugging Face](https://huggingface.co/models?library=gguf) into the `models` directory. For example, to download a smaller Q4_K_M model:
+
+```bash
+uvx --from huggingface_hub hf download \
+  bartowski/Qwen2.5-14B-Instruct-GGUF \
+  --include "*Q4_K_M.gguf" \
+  --local-dir models
+```
+
+The `models` directory is gitignored, so downloaded model files will not be committed. To try a new model without changing the default configuration, pass its path with `--model`:
+
+```bash
+uv run python quiz_maker.py \
+  --input example/example_doc1.docx \
+  --model models/Qwen2.5-14B-Instruct-Q4_K_M.gguf
+```
+
+To make it the default, update `llm.model_path` in `config.yaml` instead. Q4_K_M is a good starting point for balancing quality, file size, and speed. Choose an instruct/chat GGUF with a chat template and a context length that supports the configured `n_ctx`; smaller models generally use less memory and run faster, but may produce lower-quality quizzes.
 
 ## Usage
 
 ### Command-Line Interface
 
-The quiz maker provides a comprehensive CLI for generating quizzes from documents.
+The quiz maker loads the GGUF model once at startup, processes all requested documents, and exits.
 
 #### Basic Usage
 
@@ -68,8 +87,8 @@ uv run python quiz_maker.py --input essay.docx --questions 10
 # Choose output format (docx, html, or both)
 uv run python quiz_maker.py --input essay.pdf --format html
 
-# Use a different LLM model
-uv run python quiz_maker.py --input essay.docx --model mistral:7b
+# Use a different GGUF model file
+uv run python quiz_maker.py --input essay.docx --model ./models/other-model.gguf
 
 # Generate quiz without answer key
 uv run python quiz_maker.py --input essay.docx --no-answer-key
@@ -81,7 +100,7 @@ uv run python quiz_maker.py --input essay.docx --no-explanations
 #### Multiple Files
 
 ```bash
-# Process multiple files
+# Process multiple files (loads the GGUF model once)
 uv run python quiz_maker.py --input essay1.docx essay2.pdf essay3.docx --output ./batch_quizzes
 
 # Use glob patterns
@@ -116,7 +135,7 @@ uv run python quiz_maker.py --version
 | `--output` | `-o` | Output directory for generated files | `./output` |
 | `--questions` | `-q` | Number of questions to generate | From config |
 | `--format` | `-f` | Output format: docx, html, or both | `both` |
-| `--model` | `-m` | Ollama model to use | From config |
+| `--model`, `--model-path` | `-m` | Path to GGUF model file | From config |
 | `--config` | `-c` | Path to configuration file | `config.yaml` |
 | `--no-answer-key` | | Skip answer key generation | Generate key |
 | `--no-explanations` | | Exclude explanations from answer key | Include them |
@@ -125,16 +144,17 @@ uv run python quiz_maker.py --version
 | `--version` | | Show version information | |
 | `--help` | `-h` | Show help message | |
 
-
 ## Configuration
 
-The application uses [`config.yaml`](config.yaml) for configuration. Default settings:
+The application uses [`config.yaml`](config.yaml) for configuration:
 
 ```yaml
 llm:
-  model: "qwen3.5:27b-q4_K_M"
+  model_path: "./models/model.gguf"
+  n_ctx: 32768
+  n_gpu_layers: -1
   temperature: 0.7
-  max_tokens: 2000
+  max_tokens: 5000
 
 quiz:
   default_questions: 5
@@ -145,7 +165,9 @@ output:
   quiz_dir: "./output/quizzes"
   answer_key_dir: "./output/answer_keys"
   include_explanations: true
-
-processing:
-  timeout_seconds: 120
 ```
+
+### Memory and Context Window Notes
+
+- `n_ctx` sets the total token budget (`prompt tokens + max_tokens`). Before calling the model, Quiz Maker tokenizes the prompt with the loaded GGUF tokenizer and raises an explicit error if the essay plus `max_tokens` exceeds `n_ctx`.
+- `n_gpu_layers: -1` offloads all model layers to Metal/GPU. On a 32 GB Apple Silicon Mac, a 27B Q4_K_M model with `n_ctx: 32768` uses roughly 19 GB of unified memory. If memory pressure is high, lower `n_ctx` (for example `16384` or `8192`) or use a smaller GGUF model.
