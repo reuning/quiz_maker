@@ -5,7 +5,10 @@
 
 A local LLM-powered quiz generation tool that creates multiple-choice quizzes from student assignments and documents. Everything runs locally in-process via [`llama-cpp-python`](https://github.com/abetlen/llama-cpp-python) — no cloud API or background inference daemon required. There are [examples](/example/) if you are interested in what the results look like.
 
-It uses grammar-constrained JSON output (`QuizResponse` / `Question` Pydantic schemas), preflight context-budget checks so long papers are never silently truncated, quality validation checks, and Python-side option shuffling (without shuffling, the model puts nearly every answer at B).
+It uses grammar-constrained JSON output (`QuizResponse` / `Question` Pydantic schemas), preflight context-budget checks so long papers are never silently truncated, structural quality checks (including flagging correct answers much longer than the distractors), and Python-side option shuffling (without shuffling, the model puts nearly every answer at B). Every question has exactly four options (A–D).
+
+> [!NOTE]
+> The validator does not verify that questions or answers are actually supported by the paper, and it does not check for duplicate or near-duplicate questions. Review generated quizzes before use.
 
 ## Why?
 
@@ -44,8 +47,8 @@ Download a GGUF instruct/chat model from [Hugging Face](https://huggingface.co/m
 
 ```bash
 uvx --from huggingface_hub hf download \
-  bartowski/Qwen2.5-14B-Instruct-GGUF \
-  --include "*Q4_K_M.gguf" \
+  unsloth/Qwen3.8-27B-GGUF \
+  --include "*UD-Q6_K.gguf" \
   --local-dir models
 ```
 
@@ -53,8 +56,8 @@ The `models` directory is gitignored, so downloaded model files will not be comm
 
 ```bash
 uv run python quiz_maker.py \
-  --input example/example_doc1.docx \
-  --model models/Qwen2.5-14B-Instruct-Q4_K_M.gguf
+  --input example/input/example_doc1.docx \
+  --model models/Qwen3.8-27B-UD-Q6_K.gguf
 ```
 
 To make it the default, update `llm.model_path` in `config.yaml` instead. Q4_K_M is a good starting point for balancing quality, file size, and speed. Choose an instruct/chat GGUF with a chat template and a context length that supports the configured `n_ctx`; smaller models generally use less memory and run faster, but may produce lower-quality quizzes.
@@ -170,3 +173,13 @@ output:
 
 - `n_ctx` sets the total token budget (`prompt tokens + max_tokens`). Before calling the model, Quiz Maker tokenizes the prompt with the loaded GGUF tokenizer and raises an explicit error if the essay plus `max_tokens` exceeds `n_ctx`.
 - `n_gpu_layers: -1` offloads all model layers to Metal/GPU. On a 32 GB Apple Silicon Mac, a 27B Q4_K_M model with `n_ctx: 32768` uses roughly 19 GB of unified memory. If memory pressure is high, lower `n_ctx` (for example `16384` or `8192`) or use a smaller GGUF model.
+
+## Development
+
+`uv sync` installs the `dev` dependency group (`pytest`, `black`, `flake8`) by default; use `uv sync --no-dev` for a runtime-only install. `requirements.txt` mirrors `pyproject.toml` for non-uv installs.
+
+```bash
+uv run pytest -q
+```
+
+The test suite is fully mocked and needs no model file.

@@ -2,8 +2,6 @@
 Tests for question validator.
 """
 
-import pytest
-
 from src.models import Question, Quiz
 from src.question_validator import QuestionValidator
 

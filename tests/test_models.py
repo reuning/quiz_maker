@@ -5,7 +5,7 @@ Tests for data models.
 import pytest
 from pydantic import ValidationError
 
-from src.models import Question, QuizResponse, Quiz, ValidationResult
+from src.models import Question, QuizResponse, Quiz
 
 
 class TestQuestion:
@@ -125,27 +125,3 @@ class TestQuiz:
         assert "questions" in quiz_dict
         assert "num_questions" in quiz_dict
         assert quiz_dict["num_questions"] == 1
-
-
-class TestValidationResult:
-    """Tests for ValidationResult model."""
-
-    def test_valid_validation_result(self):
-        """Test creating a valid validation result."""
-        result = ValidationResult(
-            is_relevant=True,
-            confidence=0.95,
-            reason="Question directly addresses main topic",
-        )
-
-        assert result.is_relevant is True
-        assert result.confidence == 0.95
-
-    def test_confidence_bounds(self):
-        """Test that confidence must be between 0 and 1."""
-        with pytest.raises(ValidationError):
-            ValidationResult(
-                is_relevant=True,
-                confidence=1.5,  # Invalid
-                reason="Test",
-            )

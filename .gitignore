@@ -16,3 +16,5 @@ models/
 plans
 init_test
 AGENTS.md
+papers/*
+running.md

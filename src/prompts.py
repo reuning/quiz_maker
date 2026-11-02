@@ -5,7 +5,7 @@ This module contains structured prompts for generating multiple-choice questions
 from document text using a local LLM.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 
 
 class PromptTemplates:
@@ -61,45 +61,6 @@ Generate the quiz now:"""
         return prompt
 
     @staticmethod
-    def get_question_improvement_prompt(question: Dict[str, Any], issue: str) -> str:
-        """
-        Generate a prompt for improving a specific question.
-
-        Args:
-            question: The question dictionary to improve
-            issue: Description of what needs improvement
-
-        Returns:
-            Formatted prompt string for the LLM
-        """
-        prompt = f"""The following multiple-choice question needs improvement:
-
-QUESTION:
-{question.get("question", "")}
-
-OPTIONS:
-{chr(10).join(f"{k}: {v}" for k, v in question.get("options", {}).items())}
-
-CORRECT ANSWER: {question.get("correct_answer", "")}
-
-ISSUE TO FIX:
-{issue}
-
-Please provide an improved version that addresses the issue. The question should address the student as the paper's author and test recall of their own arguments or claims. Keep every option similar in length and specificity so the correct answer is not given away. Respond with valid JSON in this format:
-{{
-  "question": "Improved question text?",
-  "options": {{
-    "A": "First option",
-    "B": "Second option",
-    "C": "Third option",
-    "D": "Fourth option"
-  }},
-  "correct_answer": "A",
-  "explanation": "Brief explanation"
-}}"""
-        return prompt
-
-    @staticmethod
     def get_system_prompt() -> str:
         """
         Get the system prompt that sets the LLM's role and behavior.
@@ -115,34 +76,6 @@ Please provide an improved version that addresses the issue. The question should
 - Keep all options similar in length and specificity so the correct answer is not given away
 - Cover important ideas from different parts of the student's paper
 - Always respond with valid, properly formatted JSON"""
-
-    @staticmethod
-    def get_validation_prompt(question: Dict[str, Any], text: str) -> str:
-        """
-        Generate a prompt for validating if a question is relevant to the source text.
-
-        Args:
-            question: The question to validate
-            text: The source text
-
-        Returns:
-            Formatted prompt string for validation
-        """
-        prompt = f"""Evaluate if this multiple-choice question is relevant to and answerable from the source text.
-
-QUESTION:
-{question.get("question", "")}
-
-SOURCE TEXT:
-{text[:1000]}...
-
-Respond with valid JSON:
-{{
-  "is_relevant": true/false,
-  "confidence": 0.0-1.0,
-  "reason": "Brief explanation"
-}}"""
-        return prompt
 
     @staticmethod
     def get_single_question_prompt(

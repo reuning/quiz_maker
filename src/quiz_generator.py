@@ -7,16 +7,14 @@ validation to generate complete quizzes from source documents.
 
 import logging
 import random
-import time
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .config_manager import ConfigManager
 from .document_processor import DocumentProcessor
 from .llm_interface import LLMInterface, create_llm_interface
 from .question_validator import QuestionValidator, create_validator
-from .models import Quiz, Question, DocumentInfo
+from .models import Quiz, Question
 
 
 logger = logging.getLogger(__name__)
@@ -176,7 +174,7 @@ class QuizGenerator:
 
         Args:
             questions: List of questions to validate
-            source_text: Source text for relevance checking
+            source_text: Source text used to generate replacement questions
             target_count: Target number of valid questions
             max_retries: Maximum retries per failed question
 
@@ -187,7 +185,7 @@ class QuizGenerator:
 
         # First pass: validate all questions
         for i, question in enumerate(questions, 1):
-            is_valid, issues = self.validator.validate_question(question, source_text)
+            is_valid, issues = self.validator.validate_question(question)
 
             if is_valid:
                 valid_questions.append(question)
@@ -229,9 +227,7 @@ class QuizGenerator:
                 )
 
                 # Validate the new question
-                is_valid, issues = self.validator.validate_question(
-                    new_question, source_text
-                )
+                is_valid, issues = self.validator.validate_question(new_question)
 
                 if is_valid:
                     valid_questions.append(new_question)
@@ -349,42 +345,6 @@ class QuizGenerator:
 
         quiz = Quiz(questions=questions, source_document=doc_path, metadata=metadata)
 
-        return quiz
-
-    def validate_quiz_quality(
-        self, quiz: Quiz, source_text: str = ""
-    ) -> Dict[str, Any]:
-        """
-        Validate the overall quality of a quiz.
-
-        Args:
-            quiz: The quiz to validate
-            source_text: Optional source text for relevance checking
-
-        Returns:
-            Dictionary with validation results including:
-                - is_valid: Overall validity
-                - num_questions: Number of questions
-                - num_valid: Number of valid questions
-                - num_invalid: Number of invalid questions
-                - issues: List of issues found
-                - quality_score: Overall quality score (0-1)
-        """
-        return self.validator.validate_quiz(quiz, source_text)
-
-    def add_metadata(self, quiz: Quiz, additional_metadata: Dict[str, Any]) -> Quiz:
-        """
-        Add additional metadata to a quiz.
-
-        Args:
-            quiz: The quiz to update
-            additional_metadata: Dictionary of metadata to add
-
-        Returns:
-            Updated quiz (note: modifies in place and returns)
-        """
-        quiz.metadata.update(additional_metadata)
-        logger.debug(f"Added metadata to quiz: {list(additional_metadata.keys())}")
         return quiz
 
 

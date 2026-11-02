@@ -14,7 +14,7 @@ try:
 except ImportError:
     Llama = None
 
-from .models import Question, QuizResponse, ValidationResult
+from .models import Question, QuizResponse
 from .prompts import PromptTemplates
 
 
@@ -215,20 +215,6 @@ class LLMInterface:
 
         raise RuntimeError(f"Failed to {operation}: max_retries must be positive")
 
-    def improve_question(
-        self, question: Question, issue: str, max_retries: int = 2
-    ) -> Question:
-        """Improve a specific question based on identified issues."""
-        return self._generate_and_validate(
-            prompt=self.prompts.get_question_improvement_prompt(
-                question.model_dump(), issue
-            ),
-            system_prompt=self.prompts.get_system_prompt(),
-            response_model=Question,
-            operation="improve question",
-            max_retries=max_retries,
-        )
-
     def generate_single_question(
         self,
         text: str,
@@ -243,29 +229,6 @@ class LLMInterface:
             operation="generate a single question",
             max_retries=max_retries,
         )
-
-    def validate_question_relevance(
-        self, question: Question, source_text: str
-    ) -> Dict[str, Any]:
-        """Validate question relevance, preserving the existing fallback result."""
-        try:
-            result = self._generate_and_validate(
-                prompt=self.prompts.get_validation_prompt(
-                    question.model_dump(), source_text
-                ),
-                system_prompt=self.prompts.get_system_prompt(),
-                response_model=ValidationResult,
-                operation="validate question relevance",
-                max_retries=1,
-            )
-            return result.model_dump()
-        except Exception as exc:
-            logger.warning("Question validation failed: %s", exc)
-            return {
-                "is_relevant": True,
-                "confidence": 0.5,
-                "reason": f"Validation error: {exc}",
-            }
 
 
 def create_llm_interface(config: Dict[str, Any]) -> LLMInterface:

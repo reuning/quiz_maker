@@ -27,9 +27,6 @@ class ConfigManager:
             "answer_key_dir": "./output/answer_keys",
             "include_explanations": True,
         },
-        "processing": {
-            "timeout_seconds": 120,
-        },
     }
 
     def __init__(
@@ -121,11 +118,6 @@ class ConfigManager:
                 raise ValueError(
                     f"Invalid output format: {fmt}. Must be one of {valid_formats}"
                 )
-
-        # Validate processing settings
-        processing = self.config.get("processing", {})
-        if processing.get("timeout_seconds", 0) < 1:
-            raise ValueError("timeout_seconds must be at least 1")
 
     def _ensure_directories(self) -> None:
         """Create output directories if they don't exist."""

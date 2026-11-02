@@ -13,10 +13,8 @@ from typing import List, Optional
 
 from src.cli import parse_arguments, validate_arguments, setup_logging, print_summary
 from src.config_manager import ConfigManager
-from src.document_processor import DocumentProcessor
 from src.quiz_generator import QuizGenerator
 from src.output_formatter import OutputFormatter
-from src.models import Quiz
 
 
 logger = logging.getLogger(__name__)
